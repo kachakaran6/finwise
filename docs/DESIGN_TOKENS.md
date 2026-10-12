@@ -4,45 +4,39 @@ Source of truth in code: `lib/app/theme/tokens.dart`.
 
 ---
 
-## Colour — Light theme
+## Colour — Light theme (Neutral ink-and-paper)
 
 | Token | Hex | WCAG on bg | Use |
 |---|---|---|---|
-| `bg` | `#F4F6F2` | — | Screen / scaffold background |
+| `bg` | `#F5F4F0` | — | Screen / scaffold background (warm paper tone) |
 | `surface` | `#FFFFFF` | — | Cards, input fills |
-| `surfaceAlt` | `#EBEFE9` | — | Segmented button track, table headers |
-| `outline` | `#D8DFD8` | — | Card borders, dividers, input borders |
-| `ink` | `#101A14` | 15.5 : 1 on surface | Primary text |
-| `inkMuted` | `#55655B` | 5.8 : 1 on surface | Secondary text, placeholder labels |
-| `inkSubtle` | `#7E8C83` | 3.6 : 1 on surface | Hints, axis labels, icons |
-| `primary` | `#0F5C3A` | 5.3 : 1 on surface | CTAs, focused borders, result card bg, links |
-| `onPrimary` | `#FFFFFF` | 5.3 : 1 on primary | Text / icons on primary-coloured surfaces |
-| `primarySoft` | `#DDEBE2` | — | Icon badge bg, info panels, compare hint card |
-| `accent` | `#9A7219` | — | Chart comparison line, brass highlights |
-| `onAccent` | `#FFFFFF` | — | Text on accent-coloured surfaces |
-| `gain` | `#12703F` | — | Positive delta in Compare, gain labels |
-| `loss` | `#B3261E` | — | Error text, negative delta, validation errors |
-| `navBg` | `#12281D` | — | Floating navigation bar background |
+| `surfaceAlt` | `#ECEBE6` | — | Segmented control track, subtle backgrounds |
+| `outline` | `#DDDBD3` | — | Card borders, dividers, input borders |
+| `ink` | `#17181A` | 14.8 : 1 on surface | Primary text |
+| `inkMuted` | `#5E6168` | 5.3 : 1 on surface | Secondary text, placeholder labels |
+| `inkSubtle` | `#82858C` | 3.2 : 1 on surface | Hints, axis labels, subtle icons |
+| `primary` | `#1F5A44` | 5.8 : 1 on surface | Banknote green: primary buttons, selected tabs, links |
+| `onPrimary` | `#FFFFFF` | 5.8 : 1 on primary | Text / icons on primary surfaces |
+| `gain` | `#1B7A4B` | 4.8 : 1 on surface | Semantic positive values / gains |
+| `loss` | `#B3261E` | 5.2 : 1 on surface | Semantic negative values / errors |
+| `navBg` | `#1A1C1F` | — | Neutral floating nav bar background |
 
-## Colour — Dark theme
+## Colour — Dark theme (Neutral graphite)
 
-| Token | Hex |
-|---|---|
-| `bg` | `#0B120F` |
-| `surface` | `#111A16` |
-| `surfaceAlt` | `#17231D` |
-| `outline` | `#25352D` |
-| `ink` | `#EAF0EC` |
-| `inkMuted` | `#9DB0A5` |
-| `inkSubtle` | `#6E8176` |
-| `primary` | `#4CB782` |
-| `onPrimary` | `#06180F` |
-| `primarySoft` | `#16302A` |
-| `accent` | `#D2A64A` |
-| `onAccent` | `#1C1403` |
-| `gain` | `#4CB782` |
-| `loss` | `#E07A6F` |
-| `navBg` | `#1A2A22` |
+| Token | Hex | Use |
+|---|---|---|
+| `bg` | `#0E0F11` | True graphite dark background |
+| `surface` | `#16181B` | Neutral elevated surface |
+| `surfaceAlt` | `#1D2024` | Secondary dark surface |
+| `outline` | `#2A2D32` | Subtle borders and dividers |
+| `ink` | `#ECEDEF` | Primary text |
+| `inkMuted` | `#A3A7AE` | Secondary text |
+| `inkSubtle` | `#70747B` | Subtle text and icons |
+| `primary` | `#5DBB92` | Banknote ink highlight for dark mode |
+| `onPrimary` | `#08130E` | High contrast text on primary |
+| `gain` | `#5DBB92` | Positive values |
+| `loss` | `#E5786D` | Negative values and errors |
+| `navBg` | `#1D2024` | Neutral floating nav bar background |
 
 > **Accessibility rule**: Gains and losses are **never** communicated by colour alone.
 > Positive values carry a `+` sign; negative values carry a `−` sign and a label.

@@ -4,10 +4,13 @@ build/
 .flutter-plugins-dependencies
 .idea/
 *.iml
-pubspec.lock
 android/local.properties
 android/.gradle/
 android/.kotlin/
+*.jks
+*.keystore
+key.properties
+flutter_*.png
 .vscode/
 .DS_Store
 Thumbs.db
