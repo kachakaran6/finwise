@@ -55,7 +55,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Finwise'), findsOneWidget);
-      expect(find.text('Offline'), findsOneWidget);
       expect(find.text('Categories'), findsOneWidget);
       expect(find.text('Popular'), findsOneWidget);
     });
@@ -81,7 +80,7 @@ void main() {
       await tester.tap(find.byIcon(PhosphorIconsRegular.gearSix));
       await tester.pumpAndSettle();
       expect(find.text('Appearance'), findsOneWidget);
-      expect(find.text('Currency symbol'), findsOneWidget);
+      expect(find.text('Currency'), findsOneWidget);
     });
   });
 

@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../app/theme/tokens.dart';
 import '../../domain/calculators/catalog.dart';
 import '../../domain/models/calc.dart';
+import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../home/home_page.dart';
 
@@ -13,7 +14,7 @@ class CatalogPage extends StatefulWidget {
   State<CatalogPage> createState() => _CatalogPageState();
 }
 
-class _CatalogPageState extends State<CatalogPage> {
+class _CatalogPageState extends State<CatalogPage> with ScrollDividerMixin {
   final _search = TextEditingController();
   String _q = '';
   CalcCategory? _cat;
@@ -29,27 +30,30 @@ class _CatalogPageState extends State<CatalogPage> {
     final p = context.pal;
     final t = Theme.of(context).textTheme;
     final list = searchCatalog(_q, category: _cat);
-    return SafeArea(
-      bottom: false,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
-        children: [
-          Text('Calculators', style: t.headlineMedium),
-          const SizedBox(height: Sp.lg),
-          SearchField(controller: _search, onChanged: (v) => setState(() => _q = v)),
-          const SizedBox(height: Sp.md),
-          SizedBox(
-            height: 40,
-            child: ListView(scrollDirection: Axis.horizontal, children: [
-              _chip('All', _cat == null, () => setState(() => _cat = null), p, t),
-              for (final c in CalcCategory.values) _chip(c.label, _cat == c, () => setState(() => _cat = c), p, t),
-            ]),
+    return Column(
+      children: [
+        AppHeader(title: 'Calculators', scrolled: scrolled),
+        Expanded(
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
+            children: [
+              SearchField(controller: _search, onChanged: (v) => setState(() => _q = v)),
+              const SizedBox(height: Sp.md),
+              SizedBox(
+                height: 40,
+                child: ListView(scrollDirection: Axis.horizontal, children: [
+                  _chip('All', _cat == null, () => setState(() => _cat = null), p, t),
+                  for (final c in CalcCategory.values) _chip(c.label, _cat == c, () => setState(() => _cat = c), p, t),
+                ]),
+              ),
+              const SizedBox(height: Sp.lg),
+              if (list.isEmpty) const EmptyState(icon: PhosphorIconsRegular.magnifyingGlass, title: 'No calculators found', message: 'Try a different search or category.'),
+              for (final d in list) Padding(padding: const EdgeInsets.only(bottom: Sp.sm), child: CalcTile(def: d, onTap: () => openCalc(context, d))),
+            ],
           ),
-          const SizedBox(height: Sp.lg),
-          if (list.isEmpty) const EmptyState(icon: PhosphorIconsRegular.magnifyingGlass, title: 'No calculators found', message: 'Try a different search or category.'),
-          for (final d in list) Padding(padding: const EdgeInsets.only(bottom: Sp.sm), child: CalcTile(def: d, onTap: () => openCalc(context, d))),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
