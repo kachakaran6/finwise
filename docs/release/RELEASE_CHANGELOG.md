@@ -2,7 +2,7 @@
 
 **Date:** October 12, 2026  
 **Scope:** Android Production Hardening & Google Play Store Deployment Configuration  
-**Application:** Finwise (`com.finwise.application`)  
+**Application:** Finwise (`com.finwise.appilcation`)  
 
 ---
 

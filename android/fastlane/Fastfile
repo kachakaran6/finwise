@@ -184,7 +184,7 @@ platform :android do
     aab_path = build_flutter_aab(build_num)
 
     upload_to_play_store(
-      package_name: "com.finwise.application",
+      package_name: "com.finwise.appilcation",
       json_key: key_file,
       track: "internal",
       aab: aab_path,
@@ -204,7 +204,7 @@ platform :android do
     aab_path = build_flutter_aab(build_num)
 
     upload_to_play_store(
-      package_name: "com.finwise.application",
+      package_name: "com.finwise.appilcation",
       json_key: key_file,
       track: track_name,
       aab: aab_path,
@@ -223,7 +223,7 @@ platform :android do
     aab_path = build_flutter_aab(build_num)
 
     upload_to_play_store(
-      package_name: "com.finwise.application",
+      package_name: "com.finwise.appilcation",
       json_key: key_file,
       track: "beta",
       aab: aab_path,
@@ -242,7 +242,7 @@ platform :android do
     aab_path = build_flutter_aab(build_num)
 
     upload_params = {
-      package_name: "com.finwise.application",
+      package_name: "com.finwise.appilcation",
       json_key: key_file,
       track: "production",
       aab: aab_path,
@@ -266,7 +266,7 @@ platform :android do
     to_track = options[:to_track] || options[:track] || "Alpha-1"
 
     upload_to_play_store(
-      package_name: "com.finwise.application",
+      package_name: "com.finwise.appilcation",
       json_key: key_file,
       track: "internal",
       track_promote_to: to_track,

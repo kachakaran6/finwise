@@ -1,7 +1,7 @@
 # Finwise Production Release Readiness Report
 
 **Application Name:** Finwise  
-**Application ID:** `com.finwise.application`  
+**Application ID:** `com.finwise.appilcation`  
 **Framework:** Flutter 3.44.8 (Dart 3.12.2)  
 **Release Version:** `1.0.1`  
 **Build Version Code:** `2`  

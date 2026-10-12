@@ -1,4 +1,4 @@
-package com.finwise.application
+package com.finwise.appilcation
 
 import io.flutter.embedding.android.FlutterActivity
 
