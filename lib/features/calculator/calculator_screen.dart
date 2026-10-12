@@ -5,8 +5,10 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/play_service.dart';
 import '../../core/validation.dart';
 import '../../domain/models/calc.dart';
+import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/result_view.dart';
 
@@ -27,9 +29,10 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final Map<String, TextEditingController> _ctrl = {};
   final Map<String, String> _choices = {};
-  final Set<String> _dirty = {};
   bool _showAll = false;
   Scenario? _saved;
+  /// Whether inputs have changed since last save / initial load.
+  bool _dirty = false;
 
   @override
   void initState() {
@@ -61,7 +64,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   InputState get _state => validateInputs(widget.def, {for (final e in _ctrl.entries) e.key: e.value.text}, _choices);
 
   void _reset() => setState(() {
-        _dirty.clear();
+        _dirty = false;
         _showAll = false;
         _load(null);
       });
@@ -79,9 +82,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         ? Scenario(id: newId(), title: title, calcId: widget.def.id, inputs: Map<String, dynamic>.from(st.values), snapshot: res.toSnapshot(), createdAt: now, updatedAt: now)
         : _saved!.copyWith(title: title, inputs: Map<String, dynamic>.from(st.values), snapshot: res.toSnapshot(), updatedAt: now);
     await ref.read(scenariosProvider.notifier).save(s);
+    PlayService.onScenarioSaved().ignore();
     if (!mounted) return;
-    setState(() => _saved = s);
-    toast(context, 'Saved on this device.');
+    setState(() {
+      _saved = s;
+      _dirty = false;
+    });
+    toast(context, 'Saved.');
+  }
+
+  Future<bool> _confirmDiscard() async {
+    if (!_dirty) return true;
+    return confirm(
+      context,
+      title: 'Discard changes?',
+      message: 'You have unsaved changes. Leave without saving?',
+      action: 'Discard',
+    );
   }
 
   @override
@@ -103,53 +120,73 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(def.name),
-        actions: [
-          IconButton(
-            tooltip: fav ? 'Remove from favourites' : 'Add to favourites',
-            icon: Icon(fav ? PhosphorIconsFill.star : PhosphorIconsRegular.star, color: fav ? p.accent : p.ink),
-            onPressed: () => ref.read(settingsProvider.notifier).toggleFavorite(def.id),
-          ),
-          IconButton(tooltip: 'Reset to defaults', icon: const Icon(PhosphorIconsRegular.arrowCounterClockwise), onPressed: _reset),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.xxxl),
+    final navigator = Navigator.of(context);
+    return PopScope(
+      canPop: !_dirty,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final ok = await _confirmDiscard();
+        if (ok && mounted) {
+          navigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: p.bg,
+        body: Column(
           children: [
-            Text(def.explains, style: t.bodyMedium?.copyWith(color: p.inkMuted)),
-            const SizedBox(height: Sp.lg),
-            AppCard(
-              child: Column(children: [
-                for (final f in def.fields)
-                  if (f.visible(_choices))
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: Sp.lg),
-                      child: f.kind == FieldKind.choice ? _choiceField(f) : _numberField(f, st),
-                    ),
-              ]),
+            AppHeader(
+              title: def.name,
+              actions: [
+                AppHeaderAction(
+                  icon: fav ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                  tooltip: fav ? 'Remove from favourites' : 'Add to favourites',
+                  onPressed: () => ref.read(settingsProvider.notifier).toggleFavorite(def.id),
+                ),
+                AppHeaderAction(
+                  icon: PhosphorIconsRegular.arrowCounterClockwise,
+                  tooltip: 'Reset to defaults',
+                  onPressed: _reset,
+                ),
+              ],
             ),
-            const SizedBox(height: Sp.xl),
-            if (result != null) ...[
-              ResultView(key: ValueKey(def.id), def: def, result: result, fmt: fmt),
-              const SizedBox(height: Sp.xl),
-              FilledButton.icon(
-                onPressed: () => _save(st, result!),
-                icon: Icon(_saved == null ? PhosphorIconsRegular.floppyDisk : PhosphorIconsRegular.check, size: 20),
-                label: Text(_saved == null ? 'Save scenario' : 'Update saved scenario'),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.xxxl),
+                  children: [
+                    AppCard(
+                      child: Column(children: [
+                        for (final f in def.fields)
+                          if (f.visible(_choices))
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: Sp.lg),
+                              child: f.kind == FieldKind.choice ? _choiceField(f) : _numberField(f, st),
+                            ),
+                      ]),
+                    ),
+                    const SizedBox(height: Sp.xl),
+                    if (result != null) ...[
+                      ResultView(key: ValueKey(def.id), def: def, result: result, fmt: fmt),
+                      const SizedBox(height: Sp.xl),
+                      FilledButton.icon(
+                        onPressed: () => _save(st, result!),
+                        icon: Icon(_saved == null ? PhosphorIconsRegular.floppyDisk : PhosphorIconsRegular.check, size: 20),
+                        label: Text(_saved == null ? 'Save scenario' : 'Update saved scenario'),
+                      ),
+                    ] else
+                      AppCard(
+                        color: p.surfaceAlt,
+                        child: Row(children: [
+                          Icon(PhosphorIconsRegular.warningCircle, color: error != null ? p.loss : p.inkMuted),
+                          const SizedBox(width: Sp.md),
+                          Expanded(child: Text(error ?? 'Complete the highlighted fields to see the result.', style: t.bodyMedium)),
+                        ]),
+                      ),
+                  ],
+                ),
               ),
-            ] else
-              AppCard(
-                color: p.surfaceAlt,
-                child: Row(children: [
-                  Icon(PhosphorIconsRegular.warningCircle, color: error != null ? p.loss : p.inkMuted),
-                  const SizedBox(width: Sp.md),
-                  Expanded(child: Text(error ?? 'Complete the highlighted fields to see the result.', style: t.bodyMedium)),
-                ]),
-              ),
+            ),
           ],
         ),
       ),
@@ -157,7 +194,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   Widget _numberField(FieldDef f, InputState st) {
-    final err = (_dirty.contains(f.id) || _showAll || _ctrl[f.id]!.text.isNotEmpty) ? st.errors[f.id] : null;
+    final err = (_dirty || _showAll || (_ctrl[f.id]?.text.isNotEmpty ?? false)) ? st.errors[f.id] : null;
     final p = context.pal;
     final cur = ref.read(fmtProvider).currency.symbol.trim();
     final allowNeg = (f.min ?? 0) < 0;
@@ -165,7 +202,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       controller: _ctrl[f.id],
       keyboardType: TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))],
-      onChanged: (_) => setState(() => _dirty.add(f.id)),
+      onChanged: (_) => setState(() => _dirty = true),
       style: AppType.figure(p.ink, size: 16),
       decoration: InputDecoration(
         labelText: f.label,
@@ -186,7 +223,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       borderRadius: Rd.r(Rd.md),
       onTap: () async {
         final v = await pickOne(context, title: f.label, options: f.options, selected: value);
-        if (v != null) setState(() => _choices[f.id] = v);
+        if (v != null) {
+          setState(() {
+            _choices[f.id] = v;
+            _dirty = true;
+          });
+        }
       },
       child: InputDecorator(
         decoration: InputDecoration(labelText: f.label, helperText: f.help, helperMaxLines: 3, suffixIcon: Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted)),

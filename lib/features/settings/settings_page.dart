@@ -12,15 +12,21 @@ import 'package:share_plus/share_plus.dart';
 import '../../app/providers.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/format.dart';
+import '../../core/play_service.dart';
 import '../../data/backup.dart';
 import '../../domain/models/calc.dart';
+import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerMixin {
+  @override
+  Widget build(BuildContext context) {
     final p = context.pal;
     final t = Theme.of(context).textTheme;
     final s = ref.watch(settingsProvider);
@@ -33,79 +39,83 @@ class SettingsPage extends ConsumerWidget {
           AppCard(padding: EdgeInsets.zero, child: Column(children: children)),
         ]);
 
-    Widget row(IconData icon, String title, String? value, VoidCallback onTap, {bool last = false}) => Column(children: [
+    Widget row(IconData icon, String title, String? subtitle, VoidCallback onTap, {bool last = false}) => Column(children: [
           ListTile(
             leading: Icon(icon, size: 22, color: p.primary),
             title: Text(title, style: t.bodyLarge),
-            subtitle: value == null ? null : Text(value, style: t.bodySmall),
+            subtitle: subtitle == null ? null : Text(subtitle, style: t.bodySmall),
             trailing: Icon(PhosphorIconsRegular.caretRight, size: 18, color: p.inkSubtle),
             onTap: onTap,
           ),
           if (!last) Divider(height: 1, indent: 56, color: p.outline),
         ]);
 
-    return SafeArea(
-      bottom: false,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
-        children: [
-          Text('Settings', style: t.headlineMedium),
-          const SectionTitle('Appearance'),
-          AppCard(
-            child: SegmentedButton<ThemeMode>(
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                selectedBackgroundColor: p.primary,
-                selectedForegroundColor: p.onPrimary,
-                foregroundColor: p.ink,
-                side: BorderSide(color: p.outline),
-                textStyle: t.labelLarge,
+    return Column(
+      children: [
+        AppHeader(title: 'Settings', scrolled: scrolled),
+        Expanded(
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
+            children: [
+              const SectionTitle('Appearance'),
+              AppCard(
+                child: SegmentedButton<ThemeMode>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(PhosphorIconsRegular.circleHalf, size: 18)),
+                    ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(PhosphorIconsRegular.sun, size: 18)),
+                    ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(PhosphorIconsRegular.moon, size: 18)),
+                  ],
+                  selected: {s.themeMode},
+                  onSelectionChanged: (v) => n.setTheme(v.first),
+                ),
               ),
-              segments: const [
-                ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(PhosphorIconsRegular.circleHalf, size: 18)),
-                ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(PhosphorIconsRegular.sun, size: 18)),
-                ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(PhosphorIconsRegular.moon, size: 18)),
-              ],
-              selected: {s.themeMode},
-              onSelectionChanged: (v) => n.setTheme(v.first),
-            ),
+              group('Display', [
+                row(PhosphorIconsRegular.currencyCircleDollar, 'Currency', '${cur.name} (${cur.code})', () async {
+                  final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
+                  if (v != null) n.setCurrency(v);
+                }),
+                row(PhosphorIconsRegular.listBullets, 'Number format', '${style.label}: ${style.example}', () async {
+                  final v = await pickOne(context, title: 'Number format', selected: s.locale, options: [for (final e in numberStyles) ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')]);
+                  if (v != null) n.setLocale(v);
+                }, last: true),
+              ]),
+              group('Backup', [
+                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref)),
+                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true),
+              ]),
+              group('Privacy', [
+                row(PhosphorIconsFill.shieldCheck, 'Offline and private', null, () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Offline and private'),
+                      content: const Text('Finwise has no network permission, no account, no analytics, no ads and no cloud sync. Your data never leaves this device unless you export a backup.'),
+                      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+                    ),
+                  );
+                }, last: true),
+              ]),
+              group('Data', [
+                row(PhosphorIconsRegular.trash, 'Delete all data', 'Removes scenarios and settings', () async {
+                  final ok = await confirm(context, title: 'Delete all data?', message: 'All saved scenarios, favourites and settings on this device will be permanently removed.', action: 'Delete all');
+                  if (!ok) return;
+                  await ref.read(scenariosProvider.notifier).clear();
+                  await n.resetAll();
+                  if (context.mounted) toast(context, 'All data deleted.');
+                }, last: true),
+              ]),
+              group('App', [
+                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', null, () => PlayService.checkForUpdateManual(context)),
+                row(PhosphorIconsRegular.star, 'Rate Finwise', null, () => PlayService.rateApp(), last: true),
+              ]),
+              const SizedBox(height: Sp.xl),
+              Center(child: Text('Finwise 1.0.1\nResults are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall)),
+            ],
           ),
-          group('Display', [
-            row(PhosphorIconsRegular.currencyCircleDollar, 'Currency symbol', '${cur.name} (${cur.code}). Display only, no conversion.', () async {
-              final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
-              if (v != null) n.setCurrency(v);
-            }),
-            row(PhosphorIconsRegular.listBullets, 'Number format', '${style.label}: ${style.example}', () async {
-              final v = await pickOne(context, title: 'Number format', selected: s.locale, options: [for (final e in numberStyles) ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')]);
-              if (v != null) n.setLocale(v);
-            }, last: true),
-          ]),
-          group('Backup', [
-            row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted with a passphrase, or plain file.', () => _export(context, ref)),
-            row(PhosphorIconsRegular.downloadSimple, 'Restore from backup', 'Preview before anything is written.', () => _restore(context, ref), last: true),
-          ]),
-          const SectionTitle('Privacy'),
-          AppCard(
-            color: p.primarySoft,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [Icon(PhosphorIconsFill.shieldCheck, color: p.primary, size: 20), const SizedBox(width: Sp.sm), Text('Fully offline', style: t.titleSmall)]),
-              const SizedBox(height: Sp.sm),
-              Text('This app has no network permission, no account, no analytics, no ads and no cloud sync. Your numbers and saved scenarios never leave this device unless you export a backup yourself.', style: t.bodyMedium),
-            ]),
-          ),
-          group('Data', [
-            row(PhosphorIconsRegular.trash, 'Delete all saved data', 'Removes scenarios, favourites and settings.', () async {
-              final ok = await confirm(context, title: 'Delete all data?', message: 'All saved scenarios, favourites and settings on this device will be permanently removed.', action: 'Delete all');
-              if (!ok) return;
-              await ref.read(scenariosProvider.notifier).clear();
-              await n.resetAll();
-              if (context.mounted) toast(context, 'All data deleted.');
-            }, last: true),
-          ]),
-          const SizedBox(height: Sp.xl),
-          Center(child: Text('Finwise 1.0.0\nResults are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall)),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -138,7 +148,7 @@ class SettingsPage extends ConsumerWidget {
             if (confirmField)
               Padding(
                 padding: const EdgeInsets.only(bottom: Sp.md),
-                child: Text('If you lose this passphrase, the backup cannot be recovered. It is not stored anywhere.', style: Theme.of(ctx).textTheme.bodySmall),
+                child: Text('If you lose this passphrase, the backup cannot be recovered.', style: Theme.of(ctx).textTheme.bodySmall),
               ),
             TextField(controller: a, obscureText: true, autofocus: true, decoration: const InputDecoration(labelText: 'Passphrase')),
             if (confirmField) ...[
@@ -182,7 +192,7 @@ class SettingsPage extends ConsumerWidget {
       if (bytes == null) return;
       final dir = await getTemporaryDirectory();
       final d = DateTime.now();
-      final name = 'finance-backup-${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}.ofcbackup';
+      final name = 'finwise-backup-${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}.ofcbackup';
       final file = File('${dir.path}/$name');
       await file.writeAsBytes(bytes, flush: true);
       await Share.shareXFiles([XFile(file.path)], subject: 'Finwise backup');
