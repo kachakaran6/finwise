@@ -43,8 +43,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
     onPrimary:  Color(0xFFFFFFFF),
     gain:       Color(0xFF1B7A4B),
     loss:       Color(0xFFB3261E),
-    navBg:      Color(0xFF1A1C1F), // dark graphite — no green tint
-    shadow:     Color(0x1A17181A),
+    navBg:      Color(0xFFFFFFFF), // pure white matching cards in light theme
+    shadow:     Color(0x1F17181A),
   );
 
   // ── Dark theme — true graphite, no green tint on backgrounds ─────────────
@@ -60,7 +60,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     onPrimary:  Color(0xFF08130E),
     gain:       Color(0xFF5DBB92),
     loss:       Color(0xFFE5786D),
-    navBg:      Color(0xFF1D2024), // matches surfaceAlt — neutral graphite
+    navBg:      Color(0xFF16181B), // matches surface — neutral graphite
     shadow:     Color(0x66000000),
   );
 

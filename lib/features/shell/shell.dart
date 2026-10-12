@@ -14,15 +14,34 @@ class Shell extends StatefulWidget {
   State<Shell> createState() => _ShellState();
 }
 
-class _ShellState extends State<Shell> {
+class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
   int _index = 0;
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _fadeAnim;
 
   @override
   void initState() {
     super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 160),
+    )..value = 1.0;
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) PlayService.checkForUpdate(context);
     });
+  }
+
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
+
+  void _changeTab(int i) {
+    if (i == _index) return;
+    setState(() => _index = i);
+    _fadeCtrl.forward(from: 0.0);
   }
 
   static const _items = [
@@ -36,7 +55,7 @@ class _ShellState extends State<Shell> {
   /// Home tab exits the app.
   Future<bool> _onTabBack() async {
     if (_index != 0) {
-      setState(() => _index = 0);
+      _changeTab(0);
       return false; // consumed — do not pop
     }
     return true; // let Home's PopScope handle exit
@@ -58,9 +77,12 @@ class _ShellState extends State<Shell> {
       child: Scaffold(
         extendBody: true,
         body: Stack(children: [
-          IndexedStack(
-            index: _index,
-            children: const [HomePage(), CatalogPage(), SavedPage(), SettingsPage()],
+          FadeTransition(
+            opacity: _fadeAnim,
+            child: IndexedStack(
+              index: _index,
+              children: const [HomePage(), CatalogPage(), SavedPage(), SettingsPage()],
+            ),
           ),
           Positioned(
             left: 0,
@@ -69,7 +91,7 @@ class _ShellState extends State<Shell> {
             child: FloatingNavBar(
               items: _items,
               index: _index,
-              onChanged: (i) => setState(() => _index = i),
+              onChanged: _changeTab,
             ),
           ),
         ]),

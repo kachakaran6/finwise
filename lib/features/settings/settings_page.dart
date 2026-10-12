@@ -59,18 +59,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
             padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
             children: [
               const SectionTitle('Appearance'),
-              AppCard(
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(PhosphorIconsRegular.circleHalf, size: 18)),
-                    ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(PhosphorIconsRegular.sun, size: 18)),
-                    ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(PhosphorIconsRegular.moon, size: 18)),
-                  ],
-                  selected: {s.themeMode},
-                  onSelectionChanged: (v) => n.setTheme(v.first),
-                ),
-              ),
+              Builder(builder: (ctx) {
+                final isDark = s.themeMode == ThemeMode.dark ||
+                    (s.themeMode == ThemeMode.system && Theme.of(ctx).brightness == Brightness.dark);
+                return AppCard(
+                  padding: const EdgeInsets.symmetric(horizontal: Sp.lg, vertical: 10),
+                  onTap: () => n.setTheme(isDark ? ThemeMode.light : ThemeMode.dark),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isDark ? PhosphorIconsRegular.moon : PhosphorIconsRegular.sun,
+                        size: 22,
+                        color: p.primary,
+                      ),
+                      const SizedBox(width: Sp.md),
+                      Expanded(
+                        child: Text('Dark mode', style: t.bodyLarge),
+                      ),
+                      Switch(
+                        value: isDark,
+                        onChanged: (val) => n.setTheme(val ? ThemeMode.dark : ThemeMode.light),
+                      ),
+                    ],
+                  ),
+                );
+              }),
               group('Display', [
                 row(PhosphorIconsRegular.currencyCircleDollar, 'Currency', '${cur.name} (${cur.code})', () async {
                   final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
