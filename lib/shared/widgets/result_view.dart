@@ -41,8 +41,6 @@ class _ResultViewState extends State<ResultView> {
             alignment: Alignment.centerLeft,
             child: Text(widget.fmt.value(r.primary), style: AppType.figure(p.onPrimary, size: 34, w: FontWeight.w600)),
           ),
-          const SizedBox(height: Sp.xs),
-          Text('Estimate based on the assumptions below. Not a guarantee.', style: t.bodySmall?.copyWith(color: p.onPrimary.withValues(alpha: 0.78))),
         ]),
       ),
       const SizedBox(height: Sp.lg),
@@ -136,7 +134,7 @@ class _Notes extends StatelessWidget {
     Widget bullet(String s) => Padding(
           padding: const EdgeInsets.only(bottom: Sp.sm),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Padding(padding: const EdgeInsets.only(top: 8, right: 10), child: Container(width: 5, height: 5, decoration: BoxDecoration(color: p.accent, shape: BoxShape.circle))),
+            Padding(padding: const EdgeInsets.only(top: 8, right: 10), child: Container(width: 5, height: 5, decoration: BoxDecoration(color: p.inkMuted, shape: BoxShape.circle))),
             Expanded(child: Text(s, style: t.bodyMedium)),
           ]),
         );
@@ -173,9 +171,8 @@ class _Chart extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.pal;
     final t = Theme.of(context).textTheme;
-    final colors = [p.accent, p.primary, p.inkMuted];
-    // Emphasised series uses primary; others use accent / muted.
-    Color colorFor(int i, Series s) => s.emphasis ? p.primary : (i == 0 ? p.accent : colors[2]);
+    // Emphasised series uses primary; non-emphasised use inkMuted (neutral grey).
+    Color colorFor(int i, Series s) => s.emphasis ? p.primary : p.inkMuted;
     final bars = <LineChartBarData>[];
     for (var i = 0; i < spec.series.length; i++) {
       final s = spec.series[i];
@@ -254,7 +251,7 @@ class _Chart extends StatelessWidget {
                   for (final s in spots)
                     LineTooltipItem(
                       '${spec.series[s.barIndex].name}\n${fmt.money(s.y)}',
-                      const TextStyle(fontFamily: AppType.mono, fontSize: 11, color: Color(0xFFEAF0EC)),
+                      const TextStyle(fontFamily: AppType.mono, fontSize: 11, color: Color(0xFFECEDEF)),
                     ),
                 ],
               ),

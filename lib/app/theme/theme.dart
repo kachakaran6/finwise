@@ -8,10 +8,11 @@ ThemeData buildTheme(Brightness b) {
     brightness: b,
     primary: p.primary,
     onPrimary: p.onPrimary,
-    secondary: p.accent,
-    onSecondary: p.onAccent,
+    // No secondary accent — use primary for all interactive chrome.
+    secondary: p.primary,
+    onSecondary: p.onPrimary,
     error: p.loss,
-    onError: Colors.white,
+    onError: b == Brightness.dark ? const Color(0xFF17181A) : Colors.white,
     surface: p.surface,
     onSurface: p.ink,
     outline: p.outline,
@@ -80,6 +81,17 @@ ThemeData buildTheme(Brightness b) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: p.primary, textStyle: text.labelLarge),
     ),
+    // Neutral segmented button — thumb is surface + outline border; track is surfaceAlt.
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        selectedBackgroundColor: p.surface,
+        selectedForegroundColor: p.ink,
+        foregroundColor: p.inkMuted,
+        backgroundColor: p.surfaceAlt,
+        side: BorderSide(color: p.outline),
+        textStyle: text.labelLarge,
+      ),
+    ),
     dialogTheme: DialogThemeData(backgroundColor: p.surface),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: p.surface,
@@ -89,9 +101,9 @@ ThemeData buildTheme(Brightness b) {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: p.navBg,
-      contentTextStyle: text.bodyMedium?.copyWith(color: const Color(0xFFEAF0EC)),
+      contentTextStyle: text.bodyMedium?.copyWith(color: const Color(0xFFECEDEF)),
       shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.md)),
-      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 104),
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 92),
     ),
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? p.primary : null),

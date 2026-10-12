@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// Design tokens. Single source of truth for colour, spacing, radius, type.
-/// Palette is a restrained "treasury" scheme: deep green (primary), brass
-/// (accent), cool-neutral paper/ink surfaces, and semantic gain/loss colours.
+///
+/// Palette: ink-and-paper — warm neutral paper (light) / true graphite (dark).
+/// One primary colour only: deep banknote green / ink-teal.
+/// No brass/gold accent. Semantic colours only: gain (green) and loss (red).
+/// 60 / 30 / 10 split: neutrals 60 %, primary 10 %, surface 30 %.
 @immutable
 class AppPalette extends ThemeExtension<AppPalette> {
   const AppPalette({
@@ -15,9 +18,6 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.inkSubtle,
     required this.primary,
     required this.onPrimary,
-    required this.primarySoft,
-    required this.accent,
-    required this.onAccent,
     required this.gain,
     required this.loss,
     required this.navBg,
@@ -26,47 +26,42 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   final Color bg, surface, surfaceAlt, outline;
   final Color ink, inkMuted, inkSubtle;
-  final Color primary, onPrimary, primarySoft;
-  final Color accent, onAccent;
+  final Color primary, onPrimary;
   final Color gain, loss;
   final Color navBg, shadow;
 
+  // ── Light theme — warm paper tones, no green tint on backgrounds ──────────
   static const light = AppPalette(
-    bg: Color(0xFFF4F6F2),
-    surface: Color(0xFFFFFFFF),
-    surfaceAlt: Color(0xFFEBEFE9),
-    outline: Color(0xFFD8DFD8),
-    ink: Color(0xFF101A14),
-    inkMuted: Color(0xFF55655B),
-    inkSubtle: Color(0xFF7E8C83),
-    primary: Color(0xFF0F5C3A),
-    onPrimary: Color(0xFFFFFFFF),
-    primarySoft: Color(0xFFDDEBE2),
-    accent: Color(0xFF9A7219),
-    onAccent: Color(0xFFFFFFFF),
-    gain: Color(0xFF12703F),
-    loss: Color(0xFFB3261E),
-    navBg: Color(0xFF12281D),
-    shadow: Color(0x2210281C),
+    bg:         Color(0xFFF5F4F0), // warm paper
+    surface:    Color(0xFFFFFFFF),
+    surfaceAlt: Color(0xFFECEBE6), // slightly warm off-white
+    outline:    Color(0xFFDDDBD3),
+    ink:        Color(0xFF17181A), // near-black ink
+    inkMuted:   Color(0xFF5E6168),
+    inkSubtle:  Color(0xFF82858C),
+    primary:    Color(0xFF1F5A44), // deep banknote green
+    onPrimary:  Color(0xFFFFFFFF),
+    gain:       Color(0xFF1B7A4B),
+    loss:       Color(0xFFB3261E),
+    navBg:      Color(0xFF1A1C1F), // dark graphite — no green tint
+    shadow:     Color(0x1A17181A),
   );
 
+  // ── Dark theme — true graphite, no green tint on backgrounds ─────────────
   static const dark = AppPalette(
-    bg: Color(0xFF0B120F),
-    surface: Color(0xFF111A16),
-    surfaceAlt: Color(0xFF17231D),
-    outline: Color(0xFF25352D),
-    ink: Color(0xFFEAF0EC),
-    inkMuted: Color(0xFF9DB0A5),
-    inkSubtle: Color(0xFF6E8176),
-    primary: Color(0xFF4CB782),
-    onPrimary: Color(0xFF06180F),
-    primarySoft: Color(0xFF16302A),
-    accent: Color(0xFFD2A64A),
-    onAccent: Color(0xFF1C1403),
-    gain: Color(0xFF4CB782),
-    loss: Color(0xFFE07A6F),
-    navBg: Color(0xFF1A2A22),
-    shadow: Color(0x66000000),
+    bg:         Color(0xFF0E0F11),
+    surface:    Color(0xFF16181B),
+    surfaceAlt: Color(0xFF1D2024),
+    outline:    Color(0xFF2A2D32),
+    ink:        Color(0xFFECEDEF),
+    inkMuted:   Color(0xFFA3A7AE),
+    inkSubtle:  Color(0xFF70747B),
+    primary:    Color(0xFF5DBB92), // lighter for dark backgrounds
+    onPrimary:  Color(0xFF08130E),
+    gain:       Color(0xFF5DBB92),
+    loss:       Color(0xFFE5786D),
+    navBg:      Color(0xFF1D2024), // matches surfaceAlt — neutral graphite
+    shadow:     Color(0x66000000),
   );
 
   @override
@@ -85,7 +80,7 @@ class Sp {
   static const double xs = 4, sm = 8, md = 12, lg = 16, xl = 20, xxl = 24, xxxl = 32;
   static const double page = 20;
   /// Space reserved at the bottom of scroll views for the floating nav bar.
-  static const double navClearance = 108;
+  static const double navClearance = 96;
 }
 
 class Rd {

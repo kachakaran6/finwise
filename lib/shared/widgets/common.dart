@@ -88,6 +88,7 @@ class SectionTitle extends StatelessWidget {
       );
 }
 
+/// Icon badge: neutral surfaceAlt background with primary-coloured icon.
 class IconBadge extends StatelessWidget {
   const IconBadge(this.icon, {super.key, this.size = 40});
   final IconData icon;
@@ -99,7 +100,11 @@ class IconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: p.primarySoft, borderRadius: Rd.r(Rd.md)),
+      decoration: BoxDecoration(
+        color: p.surfaceAlt,
+        borderRadius: Rd.r(Rd.md),
+        border: Border.all(color: p.outline),
+      ),
       child: Icon(icon, size: size * 0.52, color: p.primary),
     );
   }
