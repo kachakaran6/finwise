@@ -1,0 +1,282 @@
+# Fastfile for Finwise Android
+default_platform(:android)
+
+platform :android do
+  # ─── Helper: Dynamic Google Play Service Account Key Resolution ────────────
+  def resolve_play_store_json_key
+    root_dir = File.expand_path("../..", __dir__)
+
+    if ENV["PLAY_STORE_JSON_KEY"] && !ENV["PLAY_STORE_JSON_KEY"].empty?
+      if File.exist?(ENV["PLAY_STORE_JSON_KEY"])
+        return File.expand_path(ENV["PLAY_STORE_JSON_KEY"])
+      else
+        UI.user_error!("❌ PLAY_STORE_JSON_KEY environment variable points to non-existent file: #{ENV['PLAY_STORE_JSON_KEY']}")
+      end
+    end
+
+    fastlane_key = File.join(__dir__, "api-key.json")
+    return fastlane_key if File.exist?(fastlane_key)
+
+    root_app_json = File.join(root_dir, "app.json")
+    return root_app_json if File.exist?(root_app_json)
+
+    root_api_key = File.join(root_dir, "api-key.json")
+    return root_api_key if File.exist?(root_api_key)
+
+    UI.user_error!(
+      "❌ Google Play API Service Account Key not found!\n" \
+      "Please provide your Google Play credentials using one of the following methods:\n" \
+      "  1. Set the PLAY_STORE_JSON_KEY environment variable with the path to your JSON key.\n" \
+      "  2. Place 'api-key.json' in 'android/fastlane/api-key.json'.\n" \
+      "  3. Place 'app.json' or 'api-key.json' in the project root directory."
+    )
+  end
+
+  # ─── Helper: Automatic Version & Build Number Manager ──────────────────────
+  def get_target_build_number(options)
+    root_dir = File.expand_path("../..", __dir__)
+    pubspec_path = File.join(root_dir, "pubspec.yaml")
+
+    UI.user_error!("pubspec.yaml not found at #{pubspec_path}") unless File.exist?(pubspec_path)
+
+    content = File.read(pubspec_path)
+    match = content.match(/^version:\s*([^\s+]+)\+(\d+)/)
+    UI.user_error!("Could not parse 'version: <name>+<number>' in pubspec.yaml") unless match
+
+    version_name = match[1]
+    current_build = match[2].to_i
+    default_build = current_build + 1
+
+    target_build = nil
+    if options[:build_number] && !options[:build_number].to_s.empty?
+      target_build = options[:build_number].to_i
+    elsif options[:version_code] && !options[:version_code].to_s.empty?
+      target_build = options[:version_code].to_i
+    elsif UI.interactive?
+      input = UI.input("Enter build number (current: #{current_build}, default: #{default_build}):")
+      target_build = input.strip.empty? ? default_build : input.to_i
+    else
+      target_build = default_build
+    end
+
+    new_content = content.sub(/^version:\s*([^\s+]+)\+(\d+)/, "version: #{version_name}+#{target_build}")
+    File.write(pubspec_path, new_content)
+    UI.success("📦 Updated pubspec.yaml version to #{version_name}+#{target_build}")
+
+    target_build
+  end
+
+  # ─── Helper: Flutter Build Helpers ─────────────────────────────────────────
+  def build_flutter_aab(build_num)
+    root_dir = File.expand_path("../..", __dir__)
+    aab_path = File.join(root_dir, "build", "app", "outputs", "bundle", "release", "app-release.aab")
+
+    UI.message("🔨 Building Flutter App Bundle (AAB) with build number #{build_num}...")
+    Dir.chdir(root_dir) do
+      sh("flutter build appbundle --release --build-number=#{build_num}")
+    end
+
+    unless File.exist?(aab_path)
+      UI.user_error!("❌ Expected AAB not found at #{aab_path}")
+    end
+
+    UI.success("✅ AAB built successfully at #{aab_path}")
+    aab_path
+  end
+
+  def build_flutter_apk(build_num)
+    root_dir = File.expand_path("../..", __dir__)
+    apk_path = File.join(root_dir, "build", "app", "outputs", "flutter-apk", "app-release.apk")
+
+    UI.message("🔨 Building Flutter APK with build number #{build_num}...")
+    Dir.chdir(root_dir) do
+      sh("flutter build apk --release --build-number=#{build_num}")
+    end
+
+    unless File.exist?(apk_path)
+      UI.user_error!("❌ Expected APK not found at #{apk_path}")
+    end
+
+    UI.success("✅ APK built successfully at #{apk_path}")
+    apk_path
+  end
+
+  # ─── Helper: Automated Git Version Archiving ───────────────────────────────
+  def git_version_backup(build_num, track_name)
+    root_dir = File.expand_path("../..", __dir__)
+    pubspec_path = File.join(root_dir, "pubspec.yaml")
+    version_name = "1.0.0"
+    if File.exist?(pubspec_path)
+      content = File.read(pubspec_path)
+      if (match = content.match(/^version:\s*([^\s+]+)\+(\d+)/))
+        version_name = match[1]
+      end
+    end
+    version_str = "#{version_name}+#{build_num}"
+    version_branch = "v#{build_num}"
+    version_tag = "v#{version_str}"
+    UI.message("🌿 Running automatic Git backup for version #{version_str}...")
+    Dir.chdir(root_dir) do
+      current_branch = `git rev-parse --abbrev-ref HEAD`.strip
+      current_branch = "main" if current_branch.empty? || current_branch == "HEAD"
+      sh("git add -A")
+      has_staged_changes = !system("git diff --cached --quiet")
+      if has_staged_changes
+        commit_msg = "chore(release): publish build ##{build_num} (#{version_str}) to #{track_name} [skip ci]"
+        sh("git commit -m \"#{commit_msg}\"")
+        UI.success("📝 Created release commit on branch '#{current_branch}'")
+      else
+        UI.message("ℹ️ Working directory clean, no uncommitted changes.")
+      end
+      UI.message("🚀 Pushing current branch '#{current_branch}' to origin...")
+      begin
+        sh("git push origin #{current_branch}")
+        UI.success("✅ Pushed branch '#{current_branch}' to origin!")
+      rescue => ex
+        UI.important("⚠️ Note: Could not push current branch to origin: #{ex.message}")
+      end
+      UI.message("🌿 Creating dedicated version branch '#{version_branch}'...")
+      sh("git branch -f #{version_branch} HEAD")
+      begin
+        sh("git push -f origin #{version_branch}")
+        UI.success("🎉 Dedicated version branch '#{version_branch}' pushed to GitHub!")
+      rescue => ex
+        UI.important("⚠️ Failed to push version branch '#{version_branch}': #{ex.message}")
+      end
+      UI.message("🏷️  Creating release tag '#{version_tag}'...")
+      sh("git tag -f -a \"#{version_tag}\" -m \"Release #{version_str} published to Google Play #{track_name}\"")
+      begin
+        sh("git push -f origin \"#{version_tag}\"")
+        UI.success("🏷️  Release tag '#{version_tag}' pushed to GitHub!")
+      rescue => ex
+        UI.important("⚠️ Failed to push tag '#{version_tag}': #{ex.message}")
+      end
+      UI.success("🏆 Git version archiving complete! Branch '#{version_branch}' & Tag '#{version_tag}' are permanently accessible on GitHub.")
+    end
+  end
+
+  # ─── Deployment Lanes ──────────────────────────────────────────────────────
+
+  desc "Run Flutter unit and widget tests"
+  lane :test do
+    root_dir = File.expand_path("../..", __dir__)
+    Dir.chdir(root_dir) do
+      sh("flutter test")
+    end
+  end
+
+  desc "Build Flutter App Bundle (AAB) without uploading"
+  lane :build do |options|
+    build_num = get_target_build_number(options)
+    build_flutter_aab(build_num)
+  end
+
+  desc "Build Flutter APK without uploading"
+  lane :build_apk do |options|
+    build_num = get_target_build_number(options)
+    build_flutter_apk(build_num)
+  end
+
+  desc "Build and publish to Google Play Internal Testing track with automated Git archiving"
+  lane :internal do |options|
+    key_file = resolve_play_store_json_key
+    build_num = get_target_build_number(options)
+    aab_path = build_flutter_aab(build_num)
+
+    upload_to_play_store(
+      package_name: "com.finwise.application",
+      json_key: key_file,
+      track: "internal",
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    git_version_backup(build_num, "Internal")
+  end
+
+  desc "Build and publish to Google Play Closed Testing track with automated Git archiving"
+  lane :closed do |options|
+    track_name = options[:track] || "Alpha-1"
+    key_file = resolve_play_store_json_key
+    build_num = get_target_build_number(options)
+    aab_path = build_flutter_aab(build_num)
+
+    upload_to_play_store(
+      package_name: "com.finwise.application",
+      json_key: key_file,
+      track: track_name,
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    git_version_backup(build_num, track_name)
+  end
+
+  desc "Build and publish to Google Play Beta track with automated Git archiving"
+  lane :beta do |options|
+    key_file = resolve_play_store_json_key
+    build_num = get_target_build_number(options)
+    aab_path = build_flutter_aab(build_num)
+
+    upload_to_play_store(
+      package_name: "com.finwise.application",
+      json_key: key_file,
+      track: "beta",
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    git_version_backup(build_num, "Beta")
+  end
+
+  desc "Build and publish to Google Play Production track with automated Git archiving"
+  lane :production do |options|
+    key_file = resolve_play_store_json_key
+    build_num = get_target_build_number(options)
+    aab_path = build_flutter_aab(build_num)
+
+    upload_params = {
+      package_name: "com.finwise.application",
+      json_key: key_file,
+      track: "production",
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    }
+
+    if options[:rollout]
+      upload_params[:rollout] = options[:rollout].to_f
+    end
+
+    upload_to_play_store(upload_params)
+
+    git_version_backup(build_num, "Production")
+  end
+
+  desc "Promote an existing build from Internal track to Closed testing without rebuilding"
+  lane :promote_to_closed do |options|
+    key_file = resolve_play_store_json_key
+    to_track = options[:to_track] || options[:track] || "Alpha-1"
+
+    upload_to_play_store(
+      package_name: "com.finwise.application",
+      json_key: key_file,
+      track: "internal",
+      track_promote_to: to_track,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    UI.success("🎉 Successfully promoted build from Internal to #{to_track} track!")
+  end
+end

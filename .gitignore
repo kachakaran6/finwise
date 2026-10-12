@@ -7,9 +7,11 @@ build/
 android/local.properties
 android/.gradle/
 android/.kotlin/
+key.properties
 *.jks
 *.keystore
-key.properties
+api-key.json
+app.json
 flutter_*.png
 .vscode/
 .DS_Store

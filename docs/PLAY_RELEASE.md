@@ -97,3 +97,61 @@ In-app reviews (`in_app_review`) use the Google Play In-App Review API.
 ### 5.2 Verification
 - Test using an account enrolled in the Internal test track downloaded from Google Play Console.
 - When running in debug mode or on devices without Google Play, calls fail silently and gracefully without showing any errors or crashes.
+
+---
+
+## 6. Automated Fastlane Pipeline & Git Archiving
+
+Fastlane is configured in `android/fastlane/` with complete Google Play deployment lanes and automated Git version archiving.
+
+### 6.1 Prerequisites
+1. **Google Play API Key**:
+   - Provide via `PLAY_STORE_JSON_KEY` environment variable, or
+   - Place as `android/fastlane/api-key.json`, or
+   - Place as `api-key.json` / `app.json` in the root directory (ignored by git).
+2. **Ruby & Bundler**: Run `bundle install` inside `android/` directory.
+
+### 6.2 Available Deployment Lanes
+All release lanes automatically bump `pubspec.yaml`, build release artifacts, upload to Google Play, and trigger automated Git archiving.
+
+- **Run Tests**:
+  ```bash
+  cd android && bundle exec fastlane test
+  ```
+- **Build AAB only** (without uploading):
+  ```bash
+  cd android && bundle exec fastlane build
+  # Or with custom build number:
+  cd android && bundle exec fastlane build build_number:40
+  ```
+- **Deploy to Closed Testing** (default track: `Alpha-1`):
+  ```bash
+  cd android && bundle exec fastlane closed
+  # Or specify track & build number:
+  cd android && bundle exec fastlane closed track:"Alpha-1" build_number:40
+  ```
+- **Deploy to Internal Testing**:
+  ```bash
+  cd android && bundle exec fastlane internal
+  ```
+- **Deploy to Beta Track**:
+  ```bash
+  cd android && bundle exec fastlane beta
+  ```
+- **Deploy to Production** (supports optional rollout):
+  ```bash
+  cd android && bundle exec fastlane production rollout:0.2
+  ```
+- **Promote Internal Build to Closed Testing**:
+  ```bash
+  cd android && bundle exec fastlane promote_to_closed to_track:"Alpha-1"
+  ```
+
+### 6.3 Automated Git Version Archiving Workflow
+Whenever any release lane runs (`closed`, `internal`, `beta`, `production`):
+1. Modified files including bumped `pubspec.yaml` are staged (`git add -A`).
+2. Release commit is created: `chore(release): publish build #<num> (<version>+<num>) to <track> [skip ci]`.
+3. Active branch is pushed to `origin`.
+4. Dedicated version branch `v<build_number>` (e.g. `v40`) is force-created and pushed to `origin`.
+5. Release tag `v<version>+<build_number>` (e.g. `v1.0.1+40`) is force-created and pushed to `origin`.
+6. Developer stays on their working branch seamlessly without checkout or stash conflicts.
