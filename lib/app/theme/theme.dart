@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'tokens.dart';
 
 ThemeData buildTheme(Brightness b) {
@@ -8,17 +9,25 @@ ThemeData buildTheme(Brightness b) {
     brightness: b,
     primary: p.primary,
     onPrimary: p.onPrimary,
-    // No secondary accent — use primary for all interactive chrome.
     secondary: p.primary,
     onSecondary: p.onPrimary,
     error: p.loss,
-    onError: b == Brightness.dark ? const Color(0xFF17181A) : Colors.white,
+    onError: b == Brightness.dark ? const Color(0xFF0F172A) : Colors.white,
     surface: p.surface,
     onSurface: p.ink,
     outline: p.outline,
+    surfaceContainerHighest: p.surfaceAlt,
   );
-  final text = AppType.textTheme(p.ink, p.inkMuted);
-  OutlineInputBorder border(Color c, [double w = 1]) =>
+
+  final baseText = AppType.textTheme(p.ink, p.inkMuted);
+  TextTheme text;
+  try {
+    text = GoogleFonts.plusJakartaSansTextTheme(baseText);
+  } catch (_) {
+    text = baseText;
+  }
+
+  OutlineInputBorder border(Color c, [double w = 1.2]) =>
       OutlineInputBorder(borderRadius: Rd.r(Rd.md), borderSide: BorderSide(color: c, width: w));
   final iconBrightness = b == Brightness.dark ? Brightness.light : Brightness.dark;
 
@@ -31,13 +40,22 @@ ThemeData buildTheme(Brightness b) {
     textTheme: text,
     extensions: [p],
     dividerColor: p.outline,
+    cardTheme: CardThemeData(
+      color: p.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: Rd.r(Rd.lg),
+        side: BorderSide(color: p.outline, width: 1.2),
+      ),
+      margin: EdgeInsets.zero,
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: p.bg,
       foregroundColor: p.ink,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: text.titleLarge,
+      titleTextStyle: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: iconBrightness,
@@ -48,51 +66,57 @@ ThemeData buildTheme(Brightness b) {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: p.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      labelStyle: text.bodyMedium?.copyWith(color: p.inkMuted),
-      floatingLabelStyle: text.labelMedium?.copyWith(color: p.primary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      labelStyle: text.bodyMedium?.copyWith(color: p.inkMuted, fontWeight: FontWeight.w500),
+      floatingLabelStyle: text.labelMedium?.copyWith(color: p.primary, fontWeight: FontWeight.w600),
       hintStyle: text.bodyMedium?.copyWith(color: p.inkSubtle),
-      helperStyle: text.bodySmall,
-      errorStyle: text.bodySmall?.copyWith(color: p.loss),
+      helperStyle: text.bodySmall?.copyWith(color: p.inkSubtle),
+      errorStyle: text.bodySmall?.copyWith(color: p.loss, fontWeight: FontWeight.w500),
       border: border(p.outline),
       enabledBorder: border(p.outline),
-      focusedBorder: border(p.primary, 1.6),
+      focusedBorder: border(p.primary, 1.8),
       errorBorder: border(p.loss),
-      focusedErrorBorder: border(p.loss, 1.6),
+      focusedErrorBorder: border(p.loss, 1.8),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: p.primary,
         foregroundColor: p.onPrimary,
-        minimumSize: const Size(48, 50),
+        minimumSize: const Size(48, 52),
+        elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.md)),
-        textStyle: text.labelLarge,
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: p.ink,
-        minimumSize: const Size(48, 50),
-        side: BorderSide(color: p.outline),
+        minimumSize: const Size(48, 52),
+        side: BorderSide(color: p.outline, width: 1.2),
         shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.md)),
-        textStyle: text.labelLarge,
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: p.primary, textStyle: text.labelLarge),
+      style: TextButton.styleFrom(
+        foregroundColor: p.primary,
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
     ),
-    // Neutral segmented button — thumb is surface + outline border; track is surfaceAlt.
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
         selectedBackgroundColor: p.surface,
         selectedForegroundColor: p.ink,
         foregroundColor: p.inkMuted,
         backgroundColor: p.surfaceAlt,
-        side: BorderSide(color: p.outline),
-        textStyle: text.labelLarge,
+        side: BorderSide(color: p.outline, width: 1.2),
+        textStyle: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
-    dialogTheme: DialogThemeData(backgroundColor: p.surface),
+    dialogTheme: DialogThemeData(
+      backgroundColor: p.surface,
+      shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.xl)),
+    ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: p.surface,
       surfaceTintColor: Colors.transparent,
@@ -100,9 +124,12 @@ ThemeData buildTheme(Brightness b) {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: p.navBg,
-      contentTextStyle: text.bodyMedium?.copyWith(color: const Color(0xFFECEDEF)),
-      shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.md)),
+      backgroundColor: p.surface,
+      contentTextStyle: text.bodyMedium?.copyWith(color: p.ink, fontWeight: FontWeight.w500),
+      shape: RoundedRectangleBorder(
+        borderRadius: Rd.r(Rd.md),
+        side: BorderSide(color: p.outline, width: 1.2),
+      ),
       insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 92),
     ),
     checkboxTheme: CheckboxThemeData(
@@ -111,3 +138,4 @@ ThemeData buildTheme(Brightness b) {
     ),
   );
 }
+
