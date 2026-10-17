@@ -11,12 +11,14 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../app/providers.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/app_info.dart';
 import '../../core/format.dart';
 import '../../core/play_service.dart';
 import '../../data/backup.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
+import '../ecosystem/our_apps_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -25,6 +27,14 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerMixin {
+  @override
+  void initState() {
+    super.initState();
+    AppInfoService.init().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
@@ -39,15 +49,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
           AppCard(padding: EdgeInsets.zero, child: Column(children: children)),
         ]);
 
-    Widget row(IconData icon, String title, String? subtitle, VoidCallback onTap, {bool last = false}) => Column(children: [
+    Widget row(IconData icon, String title, String? subtitle, VoidCallback onTap, {bool last = false, Color? iconColor}) => Column(children: [
           ListTile(
-            leading: Icon(icon, size: 22, color: p.primary),
-            title: Text(title, style: t.bodyLarge),
-            subtitle: subtitle == null ? null : Text(subtitle, style: t.bodySmall),
-            trailing: Icon(PhosphorIconsRegular.caretRight, size: 18, color: p.inkSubtle),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            leading: IconBadge(
+              icon,
+              size: 38,
+              color: iconColor ?? p.primary,
+            ),
+            title: Text(title, style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            subtitle: subtitle == null ? null : Text(subtitle, style: t.bodySmall?.copyWith(color: p.inkMuted)),
+            trailing: Icon(PhosphorIconsRegular.caretRight, size: 16, color: p.inkSubtle),
             onTap: onTap,
           ),
-          if (!last) Divider(height: 1, indent: 56, color: p.outline),
+          if (!last) Divider(height: 1, indent: 64, color: p.outline.withValues(alpha: 0.7)),
         ]);
 
     return Column(
@@ -56,59 +71,75 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.lg, Sp.page, Sp.navClearance),
+            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.navClearance),
             children: [
               const SectionTitle('Appearance'),
-              Builder(builder: (ctx) {
-                final isDark = s.themeMode == ThemeMode.dark ||
-                    (s.themeMode == ThemeMode.system && Theme.of(ctx).brightness == Brightness.dark);
-                return AppCard(
-                  padding: const EdgeInsets.symmetric(horizontal: Sp.lg, vertical: 10),
-                  onTap: () => n.setTheme(isDark ? ThemeMode.light : ThemeMode.dark),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isDark ? PhosphorIconsRegular.moon : PhosphorIconsRegular.sun,
-                        size: 22,
-                        color: p.primary,
+              AppCard(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        icon: Icon(PhosphorIconsRegular.deviceMobile, size: 18),
+                        label: Text('System'),
                       ),
-                      const SizedBox(width: Sp.md),
-                      Expanded(
-                        child: Text('Dark mode', style: t.bodyLarge),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        icon: Icon(PhosphorIconsRegular.sun, size: 18),
+                        label: Text('Light'),
                       ),
-                      Switch(
-                        value: isDark,
-                        onChanged: (val) => n.setTheme(val ? ThemeMode.dark : ThemeMode.light),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        icon: Icon(PhosphorIconsRegular.moon, size: 18),
+                        label: Text('Dark'),
                       ),
                     ],
+                    selected: {s.themeMode},
+                    onSelectionChanged: (set) => n.setTheme(set.first),
                   ),
-                );
-              }),
+                ),
+              ),
               group('Display', [
                 row(PhosphorIconsRegular.currencyCircleDollar, 'Currency', '${cur.name} (${cur.code})', () async {
                   final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
                   if (v != null) n.setCurrency(v);
-                }),
+                }, iconColor: const Color(0xFF10B981)),
                 row(PhosphorIconsRegular.listBullets, 'Number format', '${style.label}: ${style.example}', () async {
                   final v = await pickOne(context, title: 'Number format', selected: s.locale, options: [for (final e in numberStyles) ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')]);
                   if (v != null) n.setLocale(v);
-                }, last: true),
+                }, last: true, iconColor: const Color(0xFF6366F1)),
               ]),
               group('Backup', [
-                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref)),
-                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true),
+                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref), iconColor: const Color(0xFF06B6D4)),
+                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true, iconColor: const Color(0xFF8B5CF6)),
               ]),
               group('Privacy', [
-                row(PhosphorIconsFill.shieldCheck, 'Offline and private', null, () {
-                  showDialog<void>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Offline and private'),
-                      content: const Text('Finwise has no network permission, no account, no analytics, no ads and no cloud sync. Your data never leaves this device unless you export a backup.'),
-                      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
-                    ),
-                  );
-                }, last: true),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const IconBadge(PhosphorIconsFill.shieldCheck, size: 42, color: Color(0xFF10B981)),
+                      const SizedBox(width: Sp.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Offline and private', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Finwise has no network permission, no account, no analytics, no ads and no cloud sync. Your data never leaves this device.',
+                              style: t.bodySmall?.copyWith(height: 1.35, color: p.inkMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ]),
               group('Data', [
                 row(PhosphorIconsRegular.trash, 'Delete all data', 'Removes scenarios and settings', () async {
@@ -117,14 +148,76 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                   await ref.read(scenariosProvider.notifier).clear();
                   await n.resetAll();
                   if (context.mounted) toast(context, 'All data deleted.');
-                }, last: true),
+                }, last: true, iconColor: p.loss),
+              ]),
+              group('Ecosystem', [
+                row(
+                  PhosphorIconsRegular.squaresFour,
+                  'Our Apps',
+                  'Explore apps by Samyukt',
+                  () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OurAppsPage())),
+                  last: true,
+                  iconColor: const Color(0xFF6366F1),
+                ),
               ]),
               group('App', [
-                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', null, () => PlayService.checkForUpdateManual(context)),
-                row(PhosphorIconsRegular.star, 'Rate Finwise', null, () => PlayService.rateApp(), last: true),
+                row(PhosphorIconsRegular.shareNetwork, 'Share Finwise', 'Share with friends and family', () {
+                  final box = context.findRenderObject() as RenderBox?;
+                  final origin = box != null && box.hasSize
+                      ? (box.localToGlobal(Offset.zero) & box.size)
+                      : null;
+                  AppInfoService.shareApp(sharePositionOrigin: origin);
+                }, iconColor: const Color(0xFF3B82F6)),
+                row(PhosphorIconsRegular.star, 'Rate Finwise', 'Review on Google Play', () => PlayService.openPlayStoreListing(), iconColor: const Color(0xFFEAB308)),
+                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', 'Check for Google Play updates', () => PlayService.checkForUpdateManual(context), last: true, iconColor: const Color(0xFFF59E0B)),
               ]),
               const SizedBox(height: Sp.xl),
-              Center(child: Text('Finwise 1.0.1\nResults are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall)),
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: p.surfaceAlt,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: p.outline.withValues(alpha: 0.6)),
+                      ),
+                      child: Text(
+                        AppInfoService.formattedVersion,
+                        style: TextStyle(fontFamily: AppType.mono, fontSize: 11, fontWeight: FontWeight.w600, color: p.inkMuted),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Results are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall?.copyWith(color: p.inkSubtle)),
+                    const SizedBox(height: 14),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => PlayService.openUrl(AppInfoService.samyuktUrl),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Made with care by Samyukt',
+                              style: t.bodySmall?.copyWith(
+                                color: p.inkMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              PhosphorIconsRegular.arrowSquareOut,
+                              size: 13,
+                              color: p.inkSubtle,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
