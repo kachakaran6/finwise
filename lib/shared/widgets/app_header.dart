@@ -36,7 +36,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   static const double _height = 56;
 
   @override
-  Size get preferredSize => const Size.fromHeight(_height);
+  Size get preferredSize => const Size.fromHeight(_height + 1);
 
   @override
   Widget build(BuildContext context) {

@@ -54,21 +54,66 @@ IconData iconForCategory(CalcCategory c) {
   }
 }
 
+Color colorForCategory(CalcCategory c) {
+  switch (c) {
+    case CalcCategory.growth:
+      return const Color(0xFF10B981);
+    case CalcCategory.loans:
+      return const Color(0xFF6366F1);
+    case CalcCategory.planning:
+      return const Color(0xFFF59E0B);
+    case CalcCategory.returns:
+      return const Color(0xFF8B5CF6);
+    case CalcCategory.utilities:
+      return const Color(0xFF06B6D4);
+  }
+}
+
 class AppCard extends StatelessWidget {
-  const AppCard({super.key, required this.child, this.padding = const EdgeInsets.all(Sp.lg), this.onTap, this.color});
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(Sp.lg),
+    this.onTap,
+    this.color,
+    this.borderRadius,
+    this.border,
+  });
+
   final Widget child;
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final Color? color;
+  final BorderRadius? borderRadius;
+  final BoxBorder? border;
 
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    return Material(
-      color: color ?? p.surface,
-      shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.lg), side: BorderSide(color: p.outline)),
+    final radius = borderRadius ?? Rd.r(Rd.lg);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: color ?? p.surface,
+        borderRadius: radius,
+        border: border ?? Border.all(color: p.outline.withValues(alpha: 0.85), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(onTap: onTap, child: Padding(padding: padding, child: child)),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: Padding(padding: padding, child: child),
+        ),
+      ),
     );
   }
 }
@@ -80,32 +125,50 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: Sp.xxl, bottom: Sp.md),
-        child: Row(children: [
-          Expanded(child: Text(text, style: Theme.of(context).textTheme.titleMedium)),
-          if (trailing != null) trailing!,
-        ]),
+        padding: const EdgeInsets.only(top: Sp.xl, bottom: Sp.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
       );
 }
 
-/// Icon badge: neutral surfaceAlt background with primary-coloured icon.
+/// Icon badge: modern tinted container with domain accent color.
 class IconBadge extends StatelessWidget {
-  const IconBadge(this.icon, {super.key, this.size = 40});
+  const IconBadge(this.icon, {super.key, this.size = 40, this.color, this.background});
   final IconData icon;
   final double size;
+  final Color? color;
+  final Color? background;
 
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
+    final c = color ?? p.primary;
+    final bg = background ?? c.withValues(alpha: 0.12);
+
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: p.surfaceAlt,
-        borderRadius: Rd.r(Rd.md),
-        border: Border.all(color: p.outline),
+        color: bg,
+        borderRadius: Rd.r(size > 48 ? Rd.lg : Rd.md),
+        border: Border.all(color: c.withValues(alpha: 0.22), width: 1),
       ),
-      child: Icon(icon, size: size * 0.52, color: p.primary),
+      child: Center(
+        child: Icon(icon, size: size * 0.52, color: c),
+      ),
     );
   }
 }
@@ -119,21 +182,49 @@ class CalcTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final catColor = colorForCategory(def.category);
+
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: Sp.lg, vertical: Sp.md),
-      child: Row(children: [
-        IconBadge(iconForCalc(def.id)),
-        const SizedBox(width: Sp.md),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(def.name, style: t.titleSmall),
-            const SizedBox(height: 2),
-            Text(def.summary, style: t.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis),
-          ]),
-        ),
-        trailing ?? Icon(PhosphorIconsRegular.caretRight, size: 18, color: context.pal.inkSubtle),
-      ]),
+      padding: const EdgeInsets.symmetric(horizontal: Sp.lg, vertical: 14),
+      child: Row(
+        children: [
+          IconBadge(
+            iconForCalc(def.id),
+            color: catColor,
+            size: 42,
+          ),
+          const SizedBox(width: Sp.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  def.name,
+                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  def.summary,
+                  style: t.bodySmall?.copyWith(height: 1.3),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          trailing ??
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: context.pal.surfaceAlt.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(PhosphorIconsRegular.caretRight, size: 14, color: context.pal.inkMuted),
+              ),
+        ],
+      ),
     );
   }
 }
@@ -147,14 +238,17 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.all(Sp.xxxl),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        IconBadge(icon, size: 56),
-        const SizedBox(height: Sp.lg),
-        Text(title, style: t.titleMedium, textAlign: TextAlign.center),
-        const SizedBox(height: Sp.sm),
-        Text(message, style: t.bodySmall, textAlign: TextAlign.center),
-      ]),
+      padding: const EdgeInsets.symmetric(horizontal: Sp.xl, vertical: Sp.xxxl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconBadge(icon, size: 64),
+          const SizedBox(height: Sp.lg),
+          Text(title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+          const SizedBox(height: Sp.sm),
+          Text(message, style: t.bodySmall?.copyWith(height: 1.4), textAlign: TextAlign.center),
+        ],
+      ),
     );
   }
 }
@@ -166,25 +260,30 @@ class SearchField extends StatelessWidget {
   final String hint;
 
   @override
-  Widget build(BuildContext context) => TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20, color: context.pal.inkMuted),
-          suffixIcon: controller.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: Icon(PhosphorIconsRegular.x, size: 18, color: context.pal.inkMuted),
-                  tooltip: 'Clear search',
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                ),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      textInputAction: TextInputAction.search,
+      style: TextStyle(color: p.ink, fontSize: 15, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: p.inkSubtle, fontSize: 15),
+        prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20, color: p.inkMuted),
+        suffixIcon: controller.text.isEmpty
+            ? null
+            : IconButton(
+                icon: Icon(PhosphorIconsRegular.xCircle, size: 19, color: p.inkMuted),
+                tooltip: 'Clear search',
+                onPressed: () {
+                  controller.clear();
+                  onChanged('');
+                },
+              ),
+      ),
+    );
+  }
 }
 
 /// Bottom-sheet single-choice picker (used instead of dropdown menus).
