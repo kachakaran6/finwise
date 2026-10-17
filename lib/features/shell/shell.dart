@@ -14,7 +14,7 @@ class Shell extends StatefulWidget {
   State<Shell> createState() => _ShellState();
 }
 
-class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
+class _ShellState extends State<Shell> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   int _index = 0;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fadeAnim;
@@ -22,6 +22,7 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _fadeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 160),
@@ -34,8 +35,16 @@ class _ShellState extends State<Shell> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fadeCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) PlayService.onResume(context);
+    }
   }
 
   void _changeTab(int i) {
