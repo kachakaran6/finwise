@@ -156,22 +156,31 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.xxxl),
                   children: [
                     AppCard(
-                      child: Column(children: [
-                        for (final f in def.fields)
-                          if (f.visible(_choices))
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: Sp.lg),
-                              child: f.kind == FieldKind.choice ? _choiceField(f) : _numberField(f, st),
-                            ),
-                      ]),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final f in def.fields)
+                            if (f.visible(_choices))
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: f == def.fields.last ? 0 : Sp.lg,
+                                ),
+                                child: f.kind == FieldKind.choice ? _choiceField(f) : _numberField(f, st),
+                              ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: Sp.xl),
                     if (result != null) ...[
                       ResultView(key: ValueKey(def.id), def: def, result: result, fmt: fmt),
                       const SizedBox(height: Sp.xl),
                       FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 52),
+                          shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.lg)),
+                        ),
                         onPressed: () => _save(st, result!),
-                        icon: Icon(_saved == null ? PhosphorIconsRegular.floppyDisk : PhosphorIconsRegular.check, size: 20),
+                        icon: Icon(_saved == null ? PhosphorIconsRegular.bookmarkSimple : PhosphorIconsRegular.check, size: 20),
                         label: Text(_saved == null ? 'Save scenario' : 'Update saved scenario'),
                       ),
                     ] else
@@ -193,26 +202,92 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
   }
 
+  List<num>? _getPresets(FieldDef f) {
+    if (f.id == 'p' && f.money) return const [5000, 10000, 25000, 50000, 100000];
+    if (f.id == 'r') return const [6, 8, 10, 12, 15];
+    if (f.id == 't') return const [3, 5, 10, 15, 20];
+    return null;
+  }
+
   Widget _numberField(FieldDef f, InputState st) {
     final err = (_dirty || _showAll || (_ctrl[f.id]?.text.isNotEmpty ?? false)) ? st.errors[f.id] : null;
     final p = context.pal;
     final cur = ref.read(fmtProvider).currency.symbol.trim();
     final allowNeg = (f.min ?? 0) < 0;
-    return TextField(
-      controller: _ctrl[f.id],
-      keyboardType: TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))],
-      onChanged: (_) => setState(() => _dirty = true),
-      style: AppType.figure(p.ink, size: 16),
-      decoration: InputDecoration(
-        labelText: f.label,
-        helperText: f.help,
-        helperMaxLines: 3,
-        errorText: err,
-        prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
-        suffixText: f.suffix,
-        suffixStyle: Theme.of(context).textTheme.bodySmall,
-      ),
+    final presets = _getPresets(f);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _ctrl[f.id],
+          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))],
+          onChanged: (_) => setState(() => _dirty = true),
+          style: AppType.figure(p.ink, size: 16),
+          decoration: InputDecoration(
+            labelText: f.label,
+            helperText: f.help,
+            helperMaxLines: 3,
+            errorText: err,
+            prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
+            prefixStyle: TextStyle(fontFamily: AppType.mono, fontSize: 16, color: p.inkMuted, fontWeight: FontWeight.w600),
+            suffixText: f.suffix,
+            suffixStyle: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        if (presets != null) ...[
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 30,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: presets.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (_, i) {
+                final v = presets[i];
+                final isCurrent = _ctrl[f.id]?.text == v.toString();
+                String label = v.toString();
+                if (f.money) {
+                  label = cur.isNotEmpty ? '$cur$v' : '$v';
+                } else if (f.suffix != null) {
+                  label = '$v${f.suffix}';
+                }
+                return InkWell(
+                  borderRadius: BorderRadius.circular(15),
+                  onTap: () {
+                    setState(() {
+                      _ctrl[f.id]?.text = v.toString();
+                      _dirty = true;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isCurrent ? p.primary.withValues(alpha: 0.15) : p.surfaceAlt,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: isCurrent ? p.primary : p.outline.withValues(alpha: 0.7),
+                        width: 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: AppType.mono,
+                        fontSize: 11.5,
+                        fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        color: isCurrent ? p.primary : p.inkMuted,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -231,8 +306,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         }
       },
       child: InputDecorator(
-        decoration: InputDecoration(labelText: f.label, helperText: f.help, helperMaxLines: 3, suffixIcon: Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted)),
-        child: Text(f.optionLabel(value), style: Theme.of(context).textTheme.bodyLarge),
+        decoration: InputDecoration(
+          labelText: f.label,
+          helperText: f.help,
+          helperMaxLines: 3,
+          suffixIcon: Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted),
+        ),
+        child: Text(f.optionLabel(value), style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
       ),
     );
   }

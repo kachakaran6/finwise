@@ -39,15 +39,35 @@ class ComparePage extends ConsumerWidget {
         ]);
 
     Widget line(String label, String x, String y, {bool hi = false, String? delta, bool? up}) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           child: Column(children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(flex: 4, child: Text(label, style: t.bodySmall)),
-              Expanded(flex: 3, child: Text(x, textAlign: TextAlign.right, style: AppType.figure(p.ink, size: 12.5))),
-              Expanded(flex: 3, child: Text(y, textAlign: TextAlign.right, style: AppType.figure(hi ? p.primary : p.ink, size: 12.5, w: hi ? FontWeight.w600 : FontWeight.w500))),
+            Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+              Expanded(flex: 4, child: Text(label, style: t.bodySmall?.copyWith(color: p.inkMuted, fontWeight: FontWeight.w500))),
+              Expanded(flex: 3, child: Text(x, textAlign: TextAlign.right, style: AppType.figure(p.ink, size: 13.5))),
+              Expanded(flex: 3, child: Text(y, textAlign: TextAlign.right, style: AppType.figure(hi ? p.primary : p.ink, size: 13.5, w: hi ? FontWeight.w700 : FontWeight.w600))),
             ]),
-            if (delta != null)
-              Align(alignment: Alignment.centerRight, child: Text('Change: $delta', style: t.labelSmall?.copyWith(color: up == null ? p.inkMuted : (up ? p.gain : p.loss), fontWeight: FontWeight.w600))),
+            if (delta != null) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: (up == true ? p.gain : p.loss).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Δ $delta',
+                    style: TextStyle(
+                      fontFamily: AppType.mono,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: up == null ? p.inkMuted : (up ? p.gain : p.loss),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ]),
         );
 

@@ -139,35 +139,77 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                       child: Builder(builder: (context) {
                         final def = calcById(s.calcId);
                         if (def == null) return const SizedBox.shrink();
+                        final catColor = colorForCategory(def.category);
+
                         return AppCard(
                           onTap: _selecting ? () => _toggle(s, list) : () => openCalc(context, def, existing: s),
-                          child: Row(children: [
-                            if (_selecting) Padding(padding: const EdgeInsets.only(right: Sp.md), child: Checkbox(value: _picked.contains(s.id), onChanged: (_) => _toggle(s, list))) else Padding(padding: const EdgeInsets.only(right: Sp.md), child: IconBadge(iconForCalc(def.id))),
-                            Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(s.title, style: t.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 2),
-                                Text('${def.name} · ${df.format(DateTime.fromMillisecondsSinceEpoch(s.updatedAt))}', style: t.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: Sp.xs),
-                                Text(fmt.value(s.primary), style: AppType.figure(p.primary, size: 15, w: FontWeight.w600)),
-                              ]),
-                            ),
-                            if (!_selecting)
-                              PopupMenuButton<String>(
-                                tooltip: 'Scenario actions',
-                                icon: Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted),
-                                onSelected: (v) {
-                                  if (v == 'rename') _rename(s);
-                                  if (v == 'copy') _duplicate(s);
-                                  if (v == 'delete') _delete(s);
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(value: 'rename', child: Text('Rename')),
-                                  PopupMenuItem(value: 'copy', child: Text('Duplicate')),
-                                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                                ],
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              if (_selecting)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: Sp.md),
+                                  child: Checkbox(value: _picked.contains(s.id), onChanged: (_) => _toggle(s, list)),
+                                )
+                              else
+                                Padding(
+                                  padding: const EdgeInsets.only(right: Sp.md),
+                                  child: IconBadge(
+                                    iconForCalc(def.id),
+                                    color: catColor,
+                                    size: 44,
+                                  ),
+                                ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      s.title,
+                                      style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${def.name} · ${df.format(DateTime.fromMillisecondsSinceEpoch(s.updatedAt))}',
+                                      style: t.bodySmall?.copyWith(color: p.inkMuted),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: p.primary.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        fmt.value(s.primary),
+                                        style: AppType.figure(p.primary, size: 14, w: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                          ]),
+                              if (!_selecting)
+                                PopupMenuButton<String>(
+                                  tooltip: 'Scenario actions',
+                                  icon: Icon(PhosphorIconsRegular.dotsThreeVertical, size: 20, color: p.inkMuted),
+                                  shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.md)),
+                                  onSelected: (v) {
+                                    if (v == 'rename') _rename(s);
+                                    if (v == 'copy') _duplicate(s);
+                                    if (v == 'delete') _delete(s);
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(value: 'rename', child: Text('Rename')),
+                                    PopupMenuItem(value: 'copy', child: Text('Duplicate')),
+                                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                                  ],
+                                ),
+                            ],
+                          ),
                         );
                       }),
                     ),
