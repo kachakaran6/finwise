@@ -52,6 +52,8 @@ platform :android do
       target_build = options[:build_number].to_i
     elsif options[:version_code] && !options[:version_code].to_s.empty?
       target_build = options[:version_code].to_i
+    elsif options[:use_current]
+      target_build = current_build
     elsif UI.interactive?
       input = UI.input("Enter build number (current: #{current_build}, default: #{default_build}):")
       target_build = input.strip.empty? ? default_build : input.to_i
@@ -67,9 +69,14 @@ platform :android do
   end
 
   # ─── Helper: Flutter Build Helpers ─────────────────────────────────────────
-  def build_flutter_aab(build_num)
+  def build_flutter_aab(build_num, options = {})
     root_dir = File.expand_path("../..", __dir__)
     aab_path = File.join(root_dir, "build", "app", "outputs", "bundle", "release", "app-release.aab")
+
+    if options[:skip_build] && File.exist?(aab_path)
+      UI.message("⏩ Skipping Flutter build, using existing AAB at #{aab_path}...")
+      return aab_path
+    end
 
     UI.message("🔨 Building Flutter App Bundle (AAB) with build number #{build_num}...")
     Dir.chdir(root_dir) do
@@ -168,7 +175,7 @@ platform :android do
   desc "Build Flutter App Bundle (AAB) without uploading"
   lane :build do |options|
     build_num = get_target_build_number(options)
-    build_flutter_aab(build_num)
+    build_flutter_aab(build_num, options)
   end
 
   desc "Build Flutter APK without uploading"
@@ -181,7 +188,7 @@ platform :android do
   lane :internal do |options|
     key_file = resolve_play_store_json_key
     build_num = get_target_build_number(options)
-    aab_path = build_flutter_aab(build_num)
+    aab_path = build_flutter_aab(build_num, options)
 
     upload_to_play_store(
       package_name: "com.finwise.appilcation",
@@ -198,10 +205,10 @@ platform :android do
 
   desc "Build and publish to Google Play Closed Testing track with automated Git archiving"
   lane :closed do |options|
-    track_name = options[:track] || "Alpha-1"
+    track_name = options[:track] || "alpha"
     key_file = resolve_play_store_json_key
     build_num = get_target_build_number(options)
-    aab_path = build_flutter_aab(build_num)
+    aab_path = build_flutter_aab(build_num, options)
 
     upload_to_play_store(
       package_name: "com.finwise.appilcation",
@@ -220,7 +227,7 @@ platform :android do
   lane :beta do |options|
     key_file = resolve_play_store_json_key
     build_num = get_target_build_number(options)
-    aab_path = build_flutter_aab(build_num)
+    aab_path = build_flutter_aab(build_num, options)
 
     upload_to_play_store(
       package_name: "com.finwise.appilcation",
@@ -239,7 +246,7 @@ platform :android do
   lane :production do |options|
     key_file = resolve_play_store_json_key
     build_num = get_target_build_number(options)
-    aab_path = build_flutter_aab(build_num)
+    aab_path = build_flutter_aab(build_num, options)
 
     upload_params = {
       package_name: "com.finwise.appilcation",
@@ -263,7 +270,7 @@ platform :android do
   desc "Promote an existing build from Internal track to Closed testing without rebuilding"
   lane :promote_to_closed do |options|
     key_file = resolve_play_store_json_key
-    to_track = options[:to_track] || options[:track] || "Alpha-1"
+    to_track = options[:to_track] || options[:track] || "alpha"
 
     upload_to_play_store(
       package_name: "com.finwise.appilcation",

@@ -124,11 +124,11 @@ All release lanes automatically bump `pubspec.yaml`, build release artifacts, up
   # Or with custom build number:
   cd android && bundle exec fastlane build build_number:40
   ```
-- **Deploy to Closed Testing** (default track: `Alpha-1`):
+- **Deploy to Closed Testing** (default track: `alpha`):
   ```bash
   cd android && bundle exec fastlane closed
   # Or specify track & build number:
-  cd android && bundle exec fastlane closed track:"Alpha-1" build_number:40
+  cd android && bundle exec fastlane closed track:"alpha" build_number:3
   ```
 - **Deploy to Internal Testing**:
   ```bash
@@ -144,7 +144,7 @@ All release lanes automatically bump `pubspec.yaml`, build release artifacts, up
   ```
 - **Promote Internal Build to Closed Testing**:
   ```bash
-  cd android && bundle exec fastlane promote_to_closed to_track:"Alpha-1"
+  cd android && bundle exec fastlane promote_to_closed to_track:"alpha"
   ```
 
 ### 6.3 Automated Git Version Archiving Workflow
