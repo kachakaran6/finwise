@@ -145,13 +145,16 @@ extension PaletteContext on BuildContext {
 
 class Sp {
   static const double xs = 4, sm = 8, md = 12, lg = 16, xl = 20, xxl = 24, xxxl = 32;
-  static const double page = 20;
+  static const double page = 16;
+  static const double cardGap = 12;
+  static const double sectionGap = 24;
   /// Space reserved at the bottom of scroll views for the floating nav bar.
-  static const double navClearance = 96;
+  static const double navClearance = 88;
 }
 
 class Rd {
-  static const double xs = 6, sm = 10, md = 14, lg = 20, xl = 28, full = 999;
+  static const double sm = 8, md = 12, lg = 16, xl = 20, full = 999;
+  static const double xs = 8;
   static BorderRadius r(double v) => BorderRadius.circular(v);
 }
 

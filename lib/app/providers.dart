@@ -12,17 +12,27 @@ final repoProvider = Provider<ScenarioRepository>((_) => throw UnimplementedErro
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
+    this.paletteId = 'royal_indigo',
     this.currency = 'INR',
     this.locale = 'en_IN',
     this.favorites = const [],
     this.recents = const [],
   });
   final ThemeMode themeMode;
+  final String paletteId;
   final String currency, locale;
   final List<String> favorites, recents;
 
-  AppSettings copyWith({ThemeMode? themeMode, String? currency, String? locale, List<String>? favorites, List<String>? recents}) => AppSettings(
+  AppSettings copyWith({
+    ThemeMode? themeMode,
+    String? paletteId,
+    String? currency,
+    String? locale,
+    List<String>? favorites,
+    List<String>? recents,
+  }) => AppSettings(
         themeMode: themeMode ?? this.themeMode,
+        paletteId: paletteId ?? this.paletteId,
         currency: currency ?? this.currency,
         locale: locale ?? this.locale,
         favorites: favorites ?? this.favorites,
@@ -36,9 +46,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
   @override
   AppSettings build() {
     _p = ref.read(prefsProvider);
-    final theme = _p.getString('theme') ?? 'system';
+    final theme = _p.getString('theme') ?? _p.getString('theme_mode') ?? 'system';
+    final palette = _p.getString('theme_palette') ?? 'royal_indigo';
     return AppSettings(
       themeMode: ThemeMode.values.firstWhere((m) => m.name == theme, orElse: () => ThemeMode.system),
+      paletteId: palette,
       currency: _p.getString('currency') ?? 'INR',
       locale: _p.getString('locale') ?? 'en_IN',
       favorites: _p.getStringList('favorites') ?? const [],
@@ -48,7 +60,13 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   void setTheme(ThemeMode m) {
     _p.setString('theme', m.name);
+    _p.setString('theme_mode', m.name);
     state = state.copyWith(themeMode: m);
+  }
+
+  void setPalette(String id) {
+    _p.setString('theme_palette', id);
+    state = state.copyWith(paletteId: id);
   }
 
   void setCurrency(String code) {

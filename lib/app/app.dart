@@ -2,21 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/shell/shell.dart';
+import '../theme/app_palette.dart';
+import '../theme/app_theme.dart';
 import 'providers.dart';
-import 'theme/theme.dart';
 
 class FinanceApp extends ConsumerWidget {
   const FinanceApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(settingsProvider.select((s) => s.themeMode));
+    final settings = ref.watch(settingsProvider);
+    final palette = AppPalette.byId(settings.paletteId);
     return MaterialApp(
       title: 'Finwise',
       debugShowCheckedModeBanner: false,
-      themeMode: mode,
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      themeMode: settings.themeMode,
+      theme: AppTheme.light(palette),
+      darkTheme: AppTheme.dark(palette),
       home: const Shell(),
     );
   }
