@@ -16,3 +16,5 @@ flutter_*.png
 .vscode/
 .DS_Store
 Thumbs.db
+.ua/
+.understand-anything/
