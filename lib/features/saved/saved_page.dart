@@ -9,6 +9,7 @@ import '../../domain/calculators/catalog.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
+import '../../theme/app_spacing.dart';
 import '../home/home_page.dart';
 import 'compare_page.dart';
 
@@ -129,21 +130,26 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
             Expanded(
               child: ListView(
                 controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.navClearance),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screen,
+                  AppSpacing.sm,
+                  AppSpacing.screen,
+                  AppSpacing.navClearance + AppSpacing.lg,
+                ),
                 children: [
                   if (list.isEmpty)
                     const EmptyState(icon: PhosphorIconsRegular.bookmarkSimple, title: 'No saved scenarios', message: 'Open any calculator and tap Save to keep a scenario here.'),
                   for (final s in list)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: Sp.sm),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.cardGap),
                       child: Builder(builder: (context) {
                         final def = calcById(s.calcId);
                         if (def == null) return const SizedBox.shrink();
-                        final catColor = colorForCategory(def.category);
+                        final catColor = categoryAccent(context, def.category);
 
                         return AppCard(
                           onTap: _selecting ? () => _toggle(s, list) : () => openCalc(context, def, existing: s),
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Row(
                             children: [
                               if (_selecting)
@@ -157,7 +163,7 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                                   child: IconBadge(
                                     iconForCalc(def.id),
                                     color: catColor,
-                                    size: 44,
+                                    size: 40,
                                   ),
                                 ),
                               Expanded(

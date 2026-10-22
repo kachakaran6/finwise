@@ -11,6 +11,7 @@ import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/result_view.dart';
+import '../../theme/app_radius.dart';
 
 String _initialText(Object? v) {
   if (v is! num) return '';
@@ -177,7 +178,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(borderRadius: Rd.r(Rd.lg)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                         ),
                         onPressed: () => _save(st, result!),
                         icon: Icon(_saved == null ? PhosphorIconsRegular.bookmarkSimple : PhosphorIconsRegular.check, size: 20),

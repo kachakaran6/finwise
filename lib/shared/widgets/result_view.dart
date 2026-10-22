@@ -5,6 +5,9 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/format.dart';
 import '../../domain/models/calc.dart';
+import '../../theme/app_elevation.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
 import 'common.dart';
 
 class ResultView extends StatefulWidget {
@@ -23,32 +26,20 @@ class _ResultViewState extends State<ResultView> {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final r = widget.result;
     final tabs = <String>['Summary', if (r.chart != null) 'Chart', if (r.schedule != null) 'Schedule', 'Notes'];
     if (tab >= tabs.length) tab = 0;
     final current = tabs[tab];
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      // Premium Hero Gradient Card
+      // Result Card: primary container, radius 20, e2, big value onPrimary
       Container(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              p.primary,
-              Color.lerp(p.primary, const Color(0xFF0F766E), 0.55) ?? p.primary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: Rd.r(Rd.xl),
-          boxShadow: [
-            BoxShadow(
-              color: p.primary.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          color: p.primary,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          boxShadow: isDark ? AppElevation.e2Dark : AppElevation.e2Light,
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(
@@ -57,8 +48,8 @@ class _ResultViewState extends State<ResultView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
                   r.primary.label.toUpperCase(),
@@ -157,12 +148,13 @@ class _Segments extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: Rd.r(Rd.lg),
-        border: Border.all(color: p.outline.withValues(alpha: 0.7), width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: p.outline, width: 1),
       ),
       child: Row(children: [
         for (var i = 0; i < labels.length; i++)
@@ -171,7 +163,7 @@ class _Segments extends StatelessWidget {
               button: true,
               selected: i == index,
               child: InkWell(
-                borderRadius: Rd.r(Rd.md),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
                 onTap: () => onChanged(i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
@@ -180,17 +172,9 @@ class _Segments extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
                     color: i == index ? p.surface : Colors.transparent,
-                    borderRadius: Rd.r(Rd.md),
-                    boxShadow: i == index
-                        ? [
-                            BoxShadow(
-                              color: p.shadow.withValues(alpha: 0.08),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                    border: i == index ? Border.all(color: p.outline.withValues(alpha: 0.8), width: 1) : null,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    boxShadow: (i == index && !isDark) ? AppElevation.e1Light : null,
+                    border: (i == index && isDark) ? Border.all(color: p.outline, width: 1) : null,
                   ),
                   child: Text(
                     labels[i],
