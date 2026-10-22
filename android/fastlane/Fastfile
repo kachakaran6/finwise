@@ -32,38 +32,84 @@ platform :android do
     )
   end
 
-  # ─── Helper: Automatic Version & Build Number Manager ──────────────────────
+  # ============================================================================
+  # Helper: Automatic Version & Build Number Manager
+  # Increments version_name according to cycle:
+  #   1.0.1 ... 1.0.20 -> 1.1.1 ... 1.1.20 -> 1.2.1 ... 1.2.20
+  # And increments build_number monotonically (+1)
+  # ============================================================================
+  def calculate_next_version_name(current_version_name)
+    parts = current_version_name.to_s.strip.split(".").map(&:to_i)
+    major = parts[0] || 1
+    minor = parts[1] || 0
+    patch = parts[2] || 0
+
+    if patch < 20
+      next_patch = patch + 1
+      next_minor = minor
+      next_major = major
+    else
+      next_patch = 1
+      next_minor = minor + 1
+      next_major = major
+    end
+
+    "#{next_major}.#{next_minor}.#{next_patch}"
+  end
+
   def get_target_build_number(options)
     root_dir = File.expand_path("../..", __dir__)
     pubspec_path = File.join(root_dir, "pubspec.yaml")
 
-    UI.user_error!("pubspec.yaml not found at #{pubspec_path}") unless File.exist?(pubspec_path)
-
-    content = File.read(pubspec_path)
-    match = content.match(/^version:\s*([^\s+]+)\+(\d+)/)
-    UI.user_error!("Could not parse 'version: <name>+<number>' in pubspec.yaml") unless match
-
-    version_name = match[1]
-    current_build = match[2].to_i
-    default_build = current_build + 1
-
-    target_build = nil
-    if options[:build_number] && !options[:build_number].to_s.empty?
-      target_build = options[:build_number].to_i
-    elsif options[:version_code] && !options[:version_code].to_s.empty?
-      target_build = options[:version_code].to_i
-    elsif options[:use_current]
-      target_build = current_build
-    elsif UI.interactive?
-      input = UI.input("Enter build number (current: #{current_build}, default: #{default_build}):")
-      target_build = input.strip.empty? ? default_build : input.to_i
-    else
-      target_build = default_build
+    unless File.exist?(pubspec_path)
+      UI.user_error!("Could not find pubspec.yaml at #{pubspec_path}")
     end
 
-    new_content = content.sub(/^version:\s*([^\s+]+)\+(\d+)/, "version: #{version_name}+#{target_build}")
-    File.write(pubspec_path, new_content)
-    UI.success("📦 Updated pubspec.yaml version to #{version_name}+#{target_build}")
+    pubspec_content = File.read(pubspec_path)
+    match = pubspec_content.match(/^version:\s*([^\s+]+)\+(\d+)/)
+    unless match
+      UI.user_error!("Could not parse 'version: <version_name>+<build_number>' in #{pubspec_path}")
+    end
+
+    current_version_name = match[1]
+    current_build = match[2].to_i
+    next_build = current_build + 1
+
+    auto_next_version = calculate_next_version_name(current_version_name)
+
+    target_version_name = if options[:version_name]
+                            options[:version_name].to_s.strip
+                          elsif options[:use_current]
+                            current_version_name
+                          elsif UI.interactive? && !options[:build_number] && !options[:version_code]
+                            input_ver = UI.input("Enter version name (current: #{current_version_name}, default: #{auto_next_version}): ").strip
+                            input_ver.empty? ? auto_next_version : input_ver
+                          else
+                            auto_next_version
+                          end
+
+    target_build = if options[:build_number]
+                     options[:build_number].to_i
+                   elsif options[:version_code]
+                     options[:version_code].to_i
+                   elsif options[:use_current]
+                     current_build
+                   elsif UI.interactive?
+                     input = UI.input("Enter build number (current: #{current_build}, default: #{next_build}): ").strip
+                     input.empty? ? next_build : input.to_i
+                   else
+                     next_build
+                   end
+
+    if target_build <= 0
+      UI.user_error!("Invalid build number: #{target_build}. Must be a positive integer.")
+    end
+
+    @target_version_name = target_version_name
+
+    updated_content = pubspec_content.sub(/^version:\s*[^\s+]+(\+\d+)?/, "version: #{target_version_name}+#{target_build}")
+    File.write(pubspec_path, updated_content)
+    UI.success("📦 Bumped pubspec.yaml version to: #{target_version_name}+#{target_build} (version #{target_version_name}, build ##{target_build})")
 
     target_build
   end
