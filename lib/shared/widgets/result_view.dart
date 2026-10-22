@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../app/theme/tokens.dart';
 import '../../core/format.dart';
 import '../../domain/models/calc.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_elevation.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
@@ -205,11 +206,11 @@ class _Breakdown extends StatelessWidget {
     if (rows.isEmpty) return const SizedBox.shrink();
 
     final colors = [
-      const Color(0xFF6366F1), // Indigo
-      const Color(0xFF10B981), // Emerald
-      const Color(0xFFF59E0B), // Amber
-      const Color(0xFF8B5CF6), // Purple
-      const Color(0xFF06B6D4), // Cyan
+      AppColors.indigo,
+      AppColors.brand500,
+      AppColors.warning,
+      AppColors.purple,
+      AppColors.cyan,
     ];
 
     return AppCard(
@@ -312,10 +313,10 @@ class _ChartState extends State<_Chart> {
   int _viewMode = 0; // 0 = Line Growth Curve, 1 = Donut Allocation
 
   static const _donutColors = [
-    Color(0xFF6366F1), // Indigo (Invested / Principal)
-    Color(0xFF10B981), // Emerald (Gains / Returns)
-    Color(0xFFF59E0B), // Amber (Interest)
-    Color(0xFF8B5CF6), // Purple
+    AppColors.indigo,
+    AppColors.brand500,
+    AppColors.warning,
+    AppColors.purple,
   ];
 
   @override

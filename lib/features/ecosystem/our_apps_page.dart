@@ -80,10 +80,10 @@ class _OurAppsPageState extends State<OurAppsPage> with ScrollDividerMixin {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const IconBadge(
+                      IconBadge(
                         PhosphorIconsRegular.warningCircle,
                         size: 48,
-                        color: Color(0xFFEF4444),
+                        color: p.loss,
                       ),
                       const SizedBox(height: Sp.md),
                       Text(

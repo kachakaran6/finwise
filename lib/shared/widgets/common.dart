@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/theme/tokens.dart';
 import '../../domain/models/calc.dart';
+import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_tokens.dart';
@@ -63,15 +64,15 @@ IconData iconForCategory(CalcCategory c) {
 Color colorForCategory(CalcCategory c) {
   switch (c) {
     case CalcCategory.growth:
-      return const Color(0xFF10B981);
+      return AppColors.brand500;
     case CalcCategory.loans:
-      return const Color(0xFF6366F1);
+      return AppColors.indigo;
     case CalcCategory.planning:
-      return const Color(0xFFF59E0B);
+      return AppColors.warning;
     case CalcCategory.returns:
-      return const Color(0xFF8B5CF6);
+      return AppColors.purple;
     case CalcCategory.utilities:
-      return const Color(0xFF06B6D4);
+      return AppColors.cyan;
   }
 }
 
