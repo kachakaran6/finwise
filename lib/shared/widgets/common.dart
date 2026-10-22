@@ -3,6 +3,10 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/theme/tokens.dart';
 import '../../domain/models/calc.dart';
+import '../../theme/app_elevation.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_tokens.dart';
 
 IconData iconForCalc(String id) {
   switch (id) {
@@ -69,11 +73,27 @@ Color colorForCategory(CalcCategory c) {
   }
 }
 
+Color categoryAccent(BuildContext context, CalcCategory c) {
+  final tok = context.tokens;
+  switch (c) {
+    case CalcCategory.growth:
+      return tok.accentGrowth;
+    case CalcCategory.loans:
+      return tok.accentLoans;
+    case CalcCategory.planning:
+      return tok.accentGoals;
+    case CalcCategory.returns:
+      return tok.accentReturns;
+    case CalcCategory.utilities:
+      return tok.accentUtilities;
+  }
+}
+
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(Sp.lg),
+    this.padding = const EdgeInsets.all(AppSpacing.lg),
     this.onTap,
     this.color,
     this.borderRadius,
@@ -90,20 +110,15 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    final radius = borderRadius ?? Rd.r(Rd.lg);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = borderRadius ?? BorderRadius.circular(AppRadius.lg);
 
     return Container(
       decoration: BoxDecoration(
         color: color ?? p.surface,
         borderRadius: radius,
-        border: border ?? Border.all(color: p.outline.withValues(alpha: 0.85), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow.withValues(alpha: 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: border ?? Border.all(color: p.outline, width: 1.0),
+        boxShadow: isDark ? const [] : AppElevation.e1Light,
       ),
       clipBehavior: Clip.antiAlias,
       child: Material(
@@ -125,17 +140,14 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: Sp.xl, bottom: Sp.md),
+        padding: const EdgeInsets.only(top: AppSpacing.sectionGap, bottom: AppSpacing.cardGap),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Text(
                 text,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                    ),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             if (trailing != null) trailing!,
@@ -163,11 +175,11 @@ class IconBadge extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: Rd.r(size > 48 ? Rd.lg : Rd.md),
-        border: Border.all(color: c.withValues(alpha: 0.22), width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: c.withValues(alpha: 0.20), width: 1),
       ),
       child: Center(
-        child: Icon(icon, size: size * 0.52, color: c),
+        child: Icon(icon, size: size * 0.50, color: c),
       ),
     );
   }
@@ -182,48 +194,51 @@ class CalcTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final catColor = colorForCategory(def.category);
+    final catColor = categoryAccent(context, def.category);
 
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: Sp.lg, vertical: 14),
-      child: Row(
-        children: [
-          IconBadge(
-            iconForCalc(def.id),
-            color: catColor,
-            size: 42,
-          ),
-          const SizedBox(width: Sp.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  def.name,
-                  style: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  def.summary,
-                  style: t.bodySmall?.copyWith(height: 1.3),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
+            IconBadge(
+              iconForCalc(def.id),
+              color: catColor,
+              size: 40,
             ),
-          ),
-          trailing ??
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: context.pal.surfaceAlt.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(PhosphorIconsRegular.caretRight, size: 14, color: context.pal.inkMuted),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    def.name,
+                    style: t.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    def.summary,
+                    style: t.bodyMedium?.copyWith(color: context.pal.inkMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-        ],
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            trailing ??
+                Icon(
+                  PhosphorIconsRegular.caretRight,
+                  size: 20,
+                  color: context.pal.inkSubtle,
+                ),
+          ],
+        ),
       ),
     );
   }
@@ -237,17 +252,28 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Sp.xl, vertical: Sp.xxxl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconBadge(icon, size: 64),
-          const SizedBox(height: Sp.lg),
-          Text(title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
-          const SizedBox(height: Sp.sm),
-          Text(message, style: t.bodySmall?.copyWith(height: 1.4), textAlign: TextAlign.center),
-        ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xxxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: context.pal.inkSubtle),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              title,
+              style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              message,
+              style: t.bodyMedium?.copyWith(color: context.pal.inkMuted),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
