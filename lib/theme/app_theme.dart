@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../app/theme/tokens.dart' as legacy;
 import 'app_colors.dart';
 import 'app_palette.dart';
 import 'app_radius.dart';
@@ -64,7 +65,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor:
           isDark ? AppColors.dBg : const Color(0xFFF6F8FA),
       textTheme: text,
-      extensions: [tokens],
+      extensions: [tokens, isDark ? legacy.AppPalette.dark : legacy.AppPalette.light],
       dividerTheme: DividerThemeData(color: outline, thickness: 1, space: 1),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,

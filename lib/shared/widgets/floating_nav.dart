@@ -61,6 +61,7 @@ class FloatingNavBar extends StatelessWidget {
           children: [
             for (var i = 0; i < items.length; i++)
               Expanded(
+                flex: i == index ? 2 : 1,
                 child: Semantics(
                   button: true,
                   selected: i == index,
@@ -115,7 +116,10 @@ class _NavItem extends StatelessWidget {
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: selected ? AppSpacing.sm + 2 : AppSpacing.xs,
+              vertical: 8,
+            ),
             decoration: BoxDecoration(
               color: selected
                   ? tokens.primaryContainer.withValues(alpha: 0.65)
@@ -132,15 +136,18 @@ class _NavItem extends StatelessWidget {
                   color: color,
                 ),
                 if (selected) ...[
-                  const SizedBox(width: AppSpacing.xs + 2),
-                  Text(
-                    data.label,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: tokens.primary,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      data.label,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: tokens.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],

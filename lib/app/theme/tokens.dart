@@ -32,7 +32,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   // ── Light theme — crisp modern fintech palette ──────────────────────────
   static const light = AppPalette(
-    bg:         Color(0xFFF8FAFC), // crisp clean slate-tinted canvas
+    bg:         Color(0xFFF6F8FA), // crisp clean slate-tinted canvas
     surface:    Color(0xFFFFFFFF), // pure white elevated cards
     surfaceAlt: Color(0xFFF1F5F9), // modern cool slate
     outline:    Color(0xFFE2E8F0), // ultra-subtle border
@@ -49,18 +49,18 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   // ── Dark theme — sleek obsidian & deep space navy ─────────────────────────
   static const dark = AppPalette(
-    bg:         Color(0xFF0B0F19), // rich obsidian background
-    surface:    Color(0xFF131B2E), // velvety deep navy card
-    surfaceAlt: Color(0xFF1E293B), // elevated slate container
-    outline:    Color(0xFF243044), // subtle definition
-    ink:        Color(0xFFF8FAFC), // crisp luminous white
+    bg:         Color(0xFF0B0F14), // rich obsidian background
+    surface:    Color(0xFF11161D), // velvety deep navy card
+    surfaceAlt: Color(0xFF161C24), // elevated slate container
+    outline:    Color(0xFF2A3340), // subtle definition
+    ink:        Color(0xFFF1F5F9), // crisp luminous white
     inkMuted:   Color(0xFF94A3B8), // soft slate
     inkSubtle:  Color(0xFF64748B), // muted
-    primary:    Color(0xFF10B981), // radiant emerald
-    onPrimary:  Color(0xFF042F24), // deep contrast
+    primary:    Color(0xFF34D399), // radiant emerald
+    onPrimary:  Color(0xFF04211A), // deep contrast
     gain:       Color(0xFF34D399),
     loss:       Color(0xFFF87171),
-    navBg:      Color(0xFF131B2E),
+    navBg:      Color(0xFF11161D),
     shadow:     Color(0x55000000),
   );
 
@@ -140,7 +140,12 @@ class AppPalette extends ThemeExtension<AppPalette> {
 }
 
 extension PaletteContext on BuildContext {
-  AppPalette get pal => Theme.of(this).extension<AppPalette>() ?? AppPalette.light;
+  AppPalette get pal {
+    final ext = Theme.of(this).extension<AppPalette>();
+    if (ext != null) return ext;
+    final isDark = Theme.of(this).brightness == Brightness.dark;
+    return isDark ? AppPalette.dark : AppPalette.light;
+  }
 }
 
 class Sp {

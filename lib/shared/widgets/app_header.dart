@@ -40,8 +40,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.pal;
-    final t = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
     final canPop = Navigator.canPop(context);
 
     Widget? leadingWidget = leading;
@@ -50,7 +50,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     }
 
     return Material(
-      color: p.bg,
+      color: theme.scaffoldBackgroundColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -65,7 +65,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     child: titleWidget ??
                         Text(
                           title,
-                          style: t.titleLarge,
+                          style: t.titleLarge?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -77,7 +80,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           if (scrolled)
-            Divider(height: 1, thickness: 1, color: p.outline)
+            Divider(height: 1, thickness: 1, color: theme.colorScheme.outline)
           else
             const SizedBox(height: 1),
         ],
@@ -93,7 +96,7 @@ class AppHeaderBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.pal;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Tooltip(
       message: 'Back',
       child: SizedBox(
@@ -102,7 +105,7 @@ class AppHeaderBackButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
           onTap: onPressed ?? () => Navigator.maybePop(context),
-          child: Icon(Icons.arrow_back, size: 22, color: p.ink),
+          child: Icon(Icons.arrow_back, size: 22, color: onSurface),
         ),
       ),
     );
@@ -124,7 +127,7 @@ class AppHeaderAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.pal;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Tooltip(
       message: tooltip,
       child: SizedBox(
@@ -133,7 +136,7 @@ class AppHeaderAction extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
           onTap: onPressed,
-          child: Center(child: Icon(icon, size: 22, color: p.ink)),
+          child: Center(child: Icon(icon, size: 22, color: onSurface)),
         ),
       ),
     );

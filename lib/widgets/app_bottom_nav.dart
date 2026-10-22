@@ -65,6 +65,7 @@ class AppBottomNav extends StatelessWidget {
           children: [
             for (int i = 0; i < items.length; i++)
               Expanded(
+                flex: i == currentIndex ? 2 : 1,
                 child: Semantics(
                   button: true,
                   selected: i == currentIndex,
@@ -119,7 +120,10 @@ class _NavBarItem extends StatelessWidget {
           child: AnimatedContainer(
             duration: duration,
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSelected ? AppSpacing.sm + 2 : AppSpacing.xs,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
               color: isSelected
                   ? tokens.primaryContainer.withValues(alpha: 0.65)
@@ -136,15 +140,18 @@ class _NavBarItem extends StatelessWidget {
                   color: color,
                 ),
                 if (isSelected) ...[
-                  const SizedBox(width: AppSpacing.xs + 2),
-                  Text(
-                    data.label,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: tokens.primary,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      data.label,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: tokens.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
