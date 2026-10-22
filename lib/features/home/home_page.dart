@@ -8,6 +8,9 @@ import '../../domain/calculators/catalog.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
+import '../../widgets/section_header.dart';
 import '../calculator/calculator_screen.dart';
 import '../catalog/category_page.dart';
 
@@ -32,7 +35,6 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.pal;
     final t = Theme.of(context).textTheme;
     final s = ref.watch(settingsProvider);
     final favs = s.favorites.map(calcById).whereType<CalculatorDef>().toList();
@@ -48,69 +50,76 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.navClearance),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screen,
+              AppSpacing.md,
+              AppSpacing.screen,
+              AppSpacing.navClearance + AppSpacing.lg,
+            ),
             children: [
               SearchField(controller: _search, onChanged: (v) => setState(() => _q = v)),
               if (_q.trim().isNotEmpty) ...[
-                SectionTitle('${results.length} result${results.length == 1 ? '' : 's'}'),
+                SectionHeader('${results.length} result${results.length == 1 ? '' : 's'}'),
                 if (results.isEmpty)
                   const EmptyState(
                     icon: PhosphorIconsRegular.magnifyingGlass,
                     title: 'No calculators found',
                     message: 'Try a different name, for example "loan" or "SIP".',
-                  ),
-                for (final d in results)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: Sp.sm),
-                    child: CalcTile(def: d, onTap: () => openCalc(context, d)),
-                  ),
+                  )
+                else
+                  for (int i = 0; i < results.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.cardGap),
+                    CalcTile(def: results[i], onTap: () => openCalc(context, results[i])),
+                  ],
               ] else ...[
                 if (favs.isNotEmpty) ...[
-                  const SectionTitle('Favourites'),
-                  for (final d in favs)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: Sp.sm),
-                      child: CalcTile(def: d, onTap: () => openCalc(context, d)),
-                    ),
+                  const SectionHeader('Favourites'),
+                  for (int i = 0; i < favs.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.cardGap),
+                    CalcTile(def: favs[i], onTap: () => openCalc(context, favs[i])),
+                  ],
                 ],
                 if (recents.isNotEmpty) ...[
-                  const SectionTitle('Recently used'),
+                  const SectionHeader('Recently used'),
                   SizedBox(
                     height: 44,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: recents.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: Sp.sm),
-                      itemBuilder: (_, i) {
-                        final catColor = colorForCategory(recents[i].category);
+                      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                      itemBuilder: (ctx, i) {
+                        final catColor = categoryAccent(ctx, recents[i].category);
                         return ActionChip(
                           avatar: Icon(iconForCalc(recents[i].id), size: 16, color: catColor),
                           label: Text(recents[i].name),
-                          labelStyle: t.labelLarge?.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
-                          side: BorderSide(color: p.outline.withValues(alpha: 0.8)),
-                          backgroundColor: p.surface,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          labelStyle: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                          backgroundColor: Theme.of(ctx).colorScheme.surfaceContainerHighest,
+                          side: BorderSide(color: Theme.of(ctx).colorScheme.outline),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                           onPressed: () => openCalc(context, recents[i]),
                         );
                       },
                     ),
                   ),
                 ],
-                const SectionTitle('Categories'),
+                const SectionHeader('Categories'),
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: Sp.md,
-                  crossAxisSpacing: Sp.md,
-                  childAspectRatio: 1.45,
+                  mainAxisSpacing: AppSpacing.cardGap,
+                  crossAxisSpacing: AppSpacing.cardGap,
+                  childAspectRatio: 1.40,
                   children: [
                     for (final c in CalcCategory.values)
-                      Builder(builder: (context) {
-                        final catColor = colorForCategory(c);
+                      Builder(builder: (ctx) {
+                        final catColor = categoryAccent(ctx, c);
                         return AppCard(
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CategoryPage(category: c))),
-                          padding: const EdgeInsets.all(16),
+                          onTap: () => Navigator.of(ctx).push(
+                            MaterialPageRoute(builder: (_) => CategoryPage(category: c)),
+                          ),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -121,14 +130,17 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                                 children: [
                                   Text(
                                     c.label,
-                                    style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     _calcCount(c),
-                                    style: t.bodySmall?.copyWith(color: p.inkSubtle, fontSize: 11.5),
+                                    style: t.bodyMedium?.copyWith(
+                                      color: context.pal.inkSubtle,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -138,12 +150,14 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                       }),
                   ],
                 ),
-                const SectionTitle('Popular'),
-                for (final id in const ['sip', 'emi', 'compound', 'cagr'])
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: Sp.sm),
-                    child: CalcTile(def: calcById(id)!, onTap: () => openCalc(context, calcById(id)!)),
+                const SectionHeader('Popular'),
+                for (int i = 0; i < _popularIds.length; i++) ...[
+                  if (i > 0) const SizedBox(height: AppSpacing.cardGap),
+                  CalcTile(
+                    def: calcById(_popularIds[i])!,
+                    onTap: () => openCalc(context, calcById(_popularIds[i])!),
                   ),
+                ],
               ],
             ],
           ),
@@ -152,7 +166,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
     );
   }
 
-  /// Proper plural: "N calculator" vs "N calculators"
+  static const _popularIds = ['sip', 'emi', 'compound', 'cagr'];
+
   String _calcCount(CalcCategory c) {
     final n = searchCatalog('', category: c).length;
     return '$n ${n == 1 ? 'calculator' : 'calculators'}';

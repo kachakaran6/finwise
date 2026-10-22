@@ -3,10 +3,12 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/theme/tokens.dart';
 import '../../domain/models/calc.dart';
-import '../../theme/app_elevation.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_tokens.dart';
+import '../../widgets/app_card.dart';
+
+export '../../widgets/app_card.dart';
 
 IconData iconForCalc(String id) {
   switch (id) {
@@ -86,50 +88,6 @@ Color categoryAccent(BuildContext context, CalcCategory c) {
       return tok.accentReturns;
     case CalcCategory.utilities:
       return tok.accentUtilities;
-  }
-}
-
-class AppCard extends StatelessWidget {
-  const AppCard({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(AppSpacing.lg),
-    this.onTap,
-    this.color,
-    this.borderRadius,
-    this.border,
-  });
-
-  final Widget child;
-  final EdgeInsets padding;
-  final VoidCallback? onTap;
-  final Color? color;
-  final BorderRadius? borderRadius;
-  final BoxBorder? border;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.pal;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final radius = borderRadius ?? BorderRadius.circular(AppRadius.lg);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: color ?? p.surface,
-        borderRadius: radius,
-        border: border ?? Border.all(color: p.outline, width: 1.0),
-        boxShadow: isDark ? const [] : AppElevation.e1Light,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: radius,
-          onTap: onTap,
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
-    );
   }
 }
 
