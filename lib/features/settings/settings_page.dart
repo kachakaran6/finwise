@@ -10,7 +10,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../app/providers.dart';
-import '../../app/theme/tokens.dart';
+import '../../app/theme/tokens.dart' hide AppPalette;
 import '../../core/app_info.dart';
 import '../../core/format.dart';
 import '../../core/play_service.dart';
@@ -18,6 +18,9 @@ import '../../data/backup.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_radius.dart';
+import '../../theme/app_spacing.dart';
 import '../ecosystem/our_apps_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -71,68 +74,91 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.navClearance),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screen,
+              AppSpacing.sm,
+              AppSpacing.screen,
+              AppSpacing.navClearance + AppSpacing.xl,
+            ),
             children: [
               const SectionTitle('Appearance'),
               AppCard(
-                padding: const EdgeInsets.all(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<ThemeMode>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: ThemeMode.system,
-                        icon: Icon(PhosphorIconsRegular.deviceMobile, size: 18),
-                        label: Text('System'),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<ThemeMode>(
+                        showSelectedIcon: false,
+                        segments: const [
+                          ButtonSegment(
+                            value: ThemeMode.system,
+                            icon: Icon(PhosphorIconsRegular.deviceMobile, size: 18),
+                            label: Text('System'),
+                          ),
+                          ButtonSegment(
+                            value: ThemeMode.light,
+                            icon: Icon(PhosphorIconsRegular.sun, size: 18),
+                            label: Text('Light'),
+                          ),
+                          ButtonSegment(
+                            value: ThemeMode.dark,
+                            icon: Icon(PhosphorIconsRegular.moon, size: 18),
+                            label: Text('Dark'),
+                          ),
+                        ],
+                        selected: {s.themeMode},
+                        onSelectionChanged: (set) => n.setTheme(set.first),
                       ),
-                      ButtonSegment(
-                        value: ThemeMode.light,
-                        icon: Icon(PhosphorIconsRegular.sun, size: 18),
-                        label: Text('Light'),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      'Theme colour',
+                      style: t.labelSmall?.copyWith(
+                        color: p.inkMuted,
+                        fontWeight: FontWeight.w600,
                       ),
-                      ButtonSegment(
-                        value: ThemeMode.dark,
-                        icon: Icon(PhosphorIconsRegular.moon, size: 18),
-                        label: Text('Dark'),
-                      ),
-                    ],
-                    selected: {s.themeMode},
-                    onSelectionChanged: (set) => n.setTheme(set.first),
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    ThemeColorPicker(
+                      selectedPaletteId: s.paletteId,
+                      onPaletteSelected: (palette) => n.setPalette(palette.id),
+                    ),
+                  ],
                 ),
               ),
               group('Display', [
                 row(PhosphorIconsRegular.currencyCircleDollar, 'Currency', '${cur.name} (${cur.code})', () async {
                   final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
                   if (v != null) n.setCurrency(v);
-                }, iconColor: const Color(0xFF10B981)),
+                }),
                 row(PhosphorIconsRegular.listBullets, 'Number format', '${style.label}: ${style.example}', () async {
                   final v = await pickOne(context, title: 'Number format', selected: s.locale, options: [for (final e in numberStyles) ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')]);
                   if (v != null) n.setLocale(v);
-                }, last: true, iconColor: const Color(0xFF6366F1)),
+                }, last: true),
               ]),
               group('Backup', [
-                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref), iconColor: const Color(0xFF06B6D4)),
-                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true, iconColor: const Color(0xFF8B5CF6)),
+                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref)),
+                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true),
               ]),
               group('Privacy', [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const IconBadge(PhosphorIconsFill.shieldCheck, size: 42, color: Color(0xFF10B981)),
-                      const SizedBox(width: Sp.md),
+                      IconBadge(PhosphorIconsFill.shieldCheck, size: 40, color: p.primary),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Offline and private', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                            Text('Offline and private', style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
                             Text(
                               'Finwise has no network permission, no account, no analytics, no ads and no cloud sync. Your data never leaves this device.',
-                              style: t.bodySmall?.copyWith(height: 1.35, color: p.inkMuted),
+                              style: t.bodyMedium?.copyWith(height: 1.35, color: p.inkMuted),
                             ),
                           ],
                         ),
@@ -157,7 +183,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                   'Explore apps by Samyukt',
                   () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OurAppsPage())),
                   last: true,
-                  iconColor: const Color(0xFF6366F1),
                 ),
               ]),
               group('App', [
@@ -167,11 +192,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                       ? (box.localToGlobal(Offset.zero) & box.size)
                       : null;
                   AppInfoService.shareApp(sharePositionOrigin: origin);
-                }, iconColor: const Color(0xFF3B82F6)),
-                row(PhosphorIconsRegular.star, 'Rate Finwise', 'Review on Google Play', () => PlayService.openPlayStoreListing(), iconColor: const Color(0xFFEAB308)),
-                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', 'Check for Google Play updates', () => PlayService.checkForUpdateManual(context), last: true, iconColor: const Color(0xFFF59E0B)),
+                }),
+                row(PhosphorIconsRegular.star, 'Rate Finwise', 'Review on Google Play', () => PlayService.openPlayStoreListing()),
+                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', 'Check for Google Play updates', () => PlayService.checkForUpdateManual(context), last: true),
               ]),
-              const SizedBox(height: Sp.xl),
+              const SizedBox(height: AppSpacing.xl),
               Center(
                 child: Column(
                   children: [
@@ -179,7 +204,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: p.surfaceAlt,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                         border: Border.all(color: p.outline.withValues(alpha: 0.6)),
                       ),
                       child: Text(
@@ -191,7 +216,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                     Text('Results are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall?.copyWith(color: p.inkSubtle)),
                     const SizedBox(height: 14),
                     InkWell(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
                       onTap: () => PlayService.openUrl(AppInfoService.samyuktUrl),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -215,6 +240,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                         ),
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
               ),
@@ -352,3 +378,55 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
     if (context.mounted) toast(context, 'Backup restored.');
   }
 }
+
+class ThemeColorPicker extends StatelessWidget {
+  const ThemeColorPicker({
+    super.key,
+    required this.selectedPaletteId,
+    required this.onPaletteSelected,
+  });
+
+  final String selectedPaletteId;
+  final ValueChanged<AppPalette> onPaletteSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      children: AppPalette.all.map((p) {
+        final selected = selectedPaletteId == p.id;
+        final onSurface = Theme.of(context).colorScheme.onSurface;
+        return Semantics(
+          label: 'Theme colour: ${p.name}',
+          selected: selected,
+          button: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            onTap: () => onPaletteSelected(p),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [p.primaryLight, p.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(
+                  color: selected ? onSurface : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: selected
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
+                  : null,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
