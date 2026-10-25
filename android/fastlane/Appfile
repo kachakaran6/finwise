@@ -1,3 +1,4 @@
 # Appfile for Finwise Android
-json_key_file(ENV["PLAY_STORE_JSON_KEY"] || "api-key.json")
+key_path = ENV["PLAY_STORE_JSON_KEY"] || (File.exist?("api-key.json") ? "api-key.json" : (File.exist?("../../app.json") ? "../../app.json" : "api-key.json"))
+json_key_file(key_path)
 package_name("com.finwise.appilcation")

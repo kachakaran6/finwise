@@ -57,6 +57,18 @@ platform :android do
     "#{next_major}.#{next_minor}.#{next_patch}"
   end
 
+  def ensure_changelog(build_num)
+    changelogs_dir = File.join(__dir__, "metadata", "android", "en-US", "changelogs")
+    FileUtils.mkdir_p(changelogs_dir)
+    target_file = File.join(changelogs_dir, "#{build_num}.txt")
+    default_file = File.join(changelogs_dir, "default.txt")
+
+    if !File.exist?(target_file) && File.exist?(default_file)
+      FileUtils.cp(default_file, target_file)
+      UI.message("📋 Created changelog for build ##{build_num} from default.txt")
+    end
+  end
+
   def get_target_build_number(options)
     root_dir = File.expand_path("../..", __dir__)
     pubspec_path = File.join(root_dir, "pubspec.yaml")
@@ -81,7 +93,7 @@ platform :android do
                             options[:version_name].to_s.strip
                           elsif options[:use_current]
                             current_version_name
-                          elsif UI.interactive? && !options[:build_number] && !options[:version_code]
+                          elsif options[:interactive] && UI.interactive? && !options[:build_number] && !options[:version_code]
                             input_ver = UI.input("Enter version name (current: #{current_version_name}, default: #{auto_next_version}): ").strip
                             input_ver.empty? ? auto_next_version : input_ver
                           else
@@ -94,7 +106,7 @@ platform :android do
                      options[:version_code].to_i
                    elsif options[:use_current]
                      current_build
-                   elsif UI.interactive?
+                   elsif options[:interactive] && UI.interactive?
                      input = UI.input("Enter build number (current: #{current_build}, default: #{next_build}): ").strip
                      input.empty? ? next_build : input.to_i
                    else
@@ -110,6 +122,8 @@ platform :android do
     updated_content = pubspec_content.sub(/^version:\s*[^\s+]+(\+\d+)?/, "version: #{target_version_name}+#{target_build}")
     File.write(pubspec_path, updated_content)
     UI.success("📦 Bumped pubspec.yaml version to: #{target_version_name}+#{target_build} (version #{target_version_name}, build ##{target_build})")
+
+    ensure_changelog(target_build)
 
     target_build
   end
@@ -241,7 +255,9 @@ platform :android do
       json_key: key_file,
       track: "internal",
       aab: aab_path,
+      metadata_path: File.join(__dir__, "metadata", "android"),
       skip_upload_metadata: true,
+      skip_upload_changelogs: false,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
@@ -261,7 +277,9 @@ platform :android do
       json_key: key_file,
       track: track_name,
       aab: aab_path,
+      metadata_path: File.join(__dir__, "metadata", "android"),
       skip_upload_metadata: true,
+      skip_upload_changelogs: false,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
@@ -280,7 +298,9 @@ platform :android do
       json_key: key_file,
       track: "beta",
       aab: aab_path,
+      metadata_path: File.join(__dir__, "metadata", "android"),
       skip_upload_metadata: true,
+      skip_upload_changelogs: false,
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
@@ -299,7 +319,9 @@ platform :android do
       json_key: key_file,
       track: "production",
       aab: aab_path,
+      metadata_path: File.join(__dir__, "metadata", "android"),
       skip_upload_metadata: true,
+      skip_upload_changelogs: false,
       skip_upload_images: true,
       skip_upload_screenshots: true
     }
