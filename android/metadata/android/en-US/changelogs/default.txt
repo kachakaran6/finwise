@@ -1,0 +1,6 @@
+- Added professional offline PDF report export across all financial calculators
+- Integrated executive summary cards, formula breakdowns, and amortization schedules
+- Added direct document sharing and print capabilities
+- Redesigned adaptive navigation dock for seamless screen transitions
+- Refined theme controls with dedicated Light and Dark modes and distinct color palettes
+- 100% private, offline calculations with zero data tracking

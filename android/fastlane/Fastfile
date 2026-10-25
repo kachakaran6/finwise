@@ -58,15 +58,20 @@ platform :android do
   end
 
   def ensure_changelog(build_num)
-    changelogs_dir = File.join(__dir__, "metadata", "android", "en-US", "changelogs")
-    FileUtils.mkdir_p(changelogs_dir)
-    target_file = File.join(changelogs_dir, "#{build_num}.txt")
-    default_file = File.join(changelogs_dir, "default.txt")
+    paths = [
+      File.join(__dir__, "metadata", "android", "en-US", "changelogs"),
+      File.expand_path("../metadata/android/en-US/changelogs", __dir__)
+    ]
+    paths.each do |changelogs_dir|
+      FileUtils.mkdir_p(changelogs_dir)
+      target_file = File.join(changelogs_dir, "#{build_num}.txt")
+      default_file = File.join(changelogs_dir, "default.txt")
 
-    if !File.exist?(target_file) && File.exist?(default_file)
-      FileUtils.cp(default_file, target_file)
-      UI.message("📋 Created changelog for build ##{build_num} from default.txt")
+      if !File.exist?(target_file) && File.exist?(default_file)
+        FileUtils.cp(default_file, target_file)
+      end
     end
+    UI.message("📋 Created changelog for build ##{build_num} from default.txt")
   end
 
   def get_target_build_number(options)
