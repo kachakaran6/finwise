@@ -31,8 +31,8 @@ class ThemeController extends ChangeNotifier {
       .firstWhere((m) => m.name == (p.getString('theme_mode') ?? p.getString('theme')),
           orElse: () => ThemeMode.system);
 
-  // Default when nothing is saved = Royal Indigo
+  // Default when nothing is saved = Finwise Green
   static AppPalette _readPalette(SharedPreferences p) => AppPalette.all
       .firstWhere((x) => x.id == p.getString('theme_palette'),
-          orElse: () => AppPalette.royalIndigo);
+          orElse: () => AppPalette.finwiseGreen);
 }

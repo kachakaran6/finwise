@@ -38,20 +38,20 @@ class AppPalette extends ThemeExtension<AppPalette> {
     outline:    Color(0xFFE2E8F0), // ultra-subtle border
     ink:        Color(0xFF0F172A), // deep obsidian navy ink
     inkMuted:   Color(0xFF475569), // readable slate subtitle
-    inkSubtle:  Color(0xFF94A3B8), // muted hint
+    inkSubtle:  Color(0xFF64748B), // WCAG AA compliant muted hint (4.6:1)
     primary:    Color(0xFF059669), // modern emerald fintech green
     onPrimary:  Color(0xFFFFFFFF),
-    gain:       Color(0xFF10B981), // emerald gain
-    loss:       Color(0xFFEF4444), // coral rose loss
+    gain:       Color(0xFF047857), // WCAG AA compliant emerald gain (5.48:1)
+    loss:       Color(0xFFDC2626), // WCAG AA compliant coral rose loss (4.83:1)
     navBg:      Color(0xFFFFFFFF), // pure white floating surface
     shadow:     Color(0x0F0F172A), // soft modern elevation
   );
 
   // ── Dark theme — sleek obsidian & deep space navy ─────────────────────────
   static const dark = AppPalette(
-    bg:         Color(0xFF0B0F14), // rich obsidian background
-    surface:    Color(0xFF11161D), // velvety deep navy card
-    surfaceAlt: Color(0xFF161C24), // elevated slate container
+    bg:         Color(0xFF0B0F17), // rich obsidian background
+    surface:    Color(0xFF151C28), // velvety deep navy card
+    surfaceAlt: Color(0xFF1E293B), // elevated slate container
     outline:    Color(0xFF2A3340), // subtle definition
     ink:        Color(0xFFF1F5F9), // crisp luminous white
     inkMuted:   Color(0xFF94A3B8), // soft slate
@@ -60,7 +60,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     onPrimary:  Color(0xFF04211A), // deep contrast
     gain:       Color(0xFF34D399),
     loss:       Color(0xFFF87171),
-    navBg:      Color(0xFF11161D),
+    navBg:      Color(0xFF151C28),
     shadow:     Color(0x55000000),
   );
 
@@ -154,7 +154,7 @@ class Sp {
   static const double cardGap = 12;
   static const double sectionGap = 24;
   /// Space reserved at the bottom of scroll views for the floating nav bar.
-  static const double navClearance = 88;
+  static const double navClearance = 112;
 }
 
 class Rd {

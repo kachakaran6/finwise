@@ -37,18 +37,18 @@ abstract final class AppColors {
   static const n900 = Color(0xFF0F172A);
   static const n950 = Color(0xFF020617);
 
-  // Dark surfaces
-  static const dBg = Color(0xFF0B0F14);
-  static const dSurface = Color(0xFF11161D);
-  static const dSurfaceVariant = Color(0xFF161C24);
+  // Dark surfaces (Obsidian / Deep Space Navy)
+  static const dBg = Color(0xFF0B0F17);
+  static const dSurface = Color(0xFF151C28);
+  static const dSurfaceVariant = Color(0xFF1E293B);
   static const dOutline = Color(0xFF2A3340);
   static const dOutlineStrong = Color(0xFF3A4553);
 
   // Semantic
   static const info = Color(0xFF3B82F6);
-  static const success = Color(0xFF10B981);
+  static const success = Color(0xFF047857);
   static const warning = Color(0xFFF59E0B);
-  static const danger = Color(0xFFEF4444);
+  static const danger = Color(0xFFDC2626);
   static const purple = Color(0xFF8B5CF6);
   static const cyan = Color(0xFF06B6D4);
   static const indigo = Color(0xFF6366F1);

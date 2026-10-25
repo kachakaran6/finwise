@@ -86,10 +86,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
       );
 
   static const light = AppTokens(
-    primary: AppColors.indigo600,
+    primary: AppColors.brand600,
     onPrimary: Colors.white,
-    primaryContainer: AppColors.indigo100,
-    onPrimaryContainer: AppColors.indigo800,
+    primaryContainer: AppColors.brand100,
+    onPrimaryContainer: AppColors.brand800,
     background: Color(0xFFF6F8FA),
     surface: Colors.white,
     surfaceVariant: AppColors.n100,
@@ -97,7 +97,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     outlineStrong: AppColors.n300,
     textPrimary: AppColors.n900,
     textSecondary: AppColors.n600,
-    textTertiary: AppColors.n400,
+    textTertiary: AppColors.n500, // 4.6:1 contrast on white (WCAG AA compliant)
     success: AppColors.success,
     onSuccess: Colors.white,
     successContainer: AppColors.brand100,
@@ -114,10 +114,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
   );
 
   static const dark = AppTokens(
-    primary: AppColors.indigo400,
-    onPrimary: AppColors.indigo800,
-    primaryContainer: Color(0xFF1E1B4B),
-    onPrimaryContainer: AppColors.indigo100,
+    primary: AppColors.brand400,
+    onPrimary: Color(0xFF04211A),
+    primaryContainer: Color(0xFF064E3B),
+    onPrimaryContainer: Color(0xFFD1FAE5),
     background: AppColors.dBg,
     surface: AppColors.dSurface,
     surfaceVariant: AppColors.dSurfaceVariant,
@@ -143,6 +143,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static AppTokens lightFor(AppPalette p) => light.copyWith(
         primary: p.primaryLight,
+        primaryContainer: Color.lerp(p.primaryLight, Colors.white, 0.88)!,
+        onPrimaryContainer: Color.lerp(p.primaryLight, Colors.black, 0.35)!,
         accentGrowth: p.accentGrowth,
         accentLoans: p.accentLoans,
         accentGoals: p.accentGoals,
@@ -152,6 +154,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
 
   static AppTokens darkFor(AppPalette p) => dark.copyWith(
         primary: p.primaryDark,
+        primaryContainer: Color.lerp(p.primaryDark, Colors.black, 0.70)!,
+        onPrimaryContainer: Color.lerp(p.primaryDark, Colors.white, 0.88)!,
         accentGrowth: p.accentGrowth,
         accentLoans: p.accentLoans,
         accentGoals: p.accentGoals,

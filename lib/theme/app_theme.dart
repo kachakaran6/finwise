@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app/theme/tokens.dart' as legacy;
+import '../design_system/theme/finwise_palette.dart';
+import '../design_system/theme/finwise_tokens.dart';
 import 'app_colors.dart';
 import 'app_palette.dart';
 import 'app_radius.dart';
@@ -9,15 +11,17 @@ import 'app_typography.dart';
 
 abstract final class AppTheme {
   static ThemeData light([AppPalette? palette]) {
-    final p = palette ?? AppPalette.royalIndigo;
+    final p = palette ?? AppPalette.finwiseGreen;
+    final finwisePalette = FinwisePalette.byId(p.id);
+    final finwiseTok = FinwiseTokens.lightFor(finwisePalette);
     final scheme = ColorScheme.fromSeed(
       seedColor: p.seed,
       brightness: Brightness.light,
     ).copyWith(
       primary: p.primaryLight,
       onPrimary: Colors.white,
-      primaryContainer: Color.lerp(p.primaryLight, Colors.white, 0.85)!,
-      onPrimaryContainer: Color.lerp(p.primaryLight, Colors.black, 0.4)!,
+      primaryContainer: Color.lerp(p.primaryLight, Colors.white, 0.88)!,
+      onPrimaryContainer: Color.lerp(p.primaryLight, Colors.black, 0.35)!,
       secondary: AppColors.n600,
       onSecondary: Colors.white,
       surface: Colors.white,
@@ -27,19 +31,21 @@ abstract final class AppTheme {
       onError: Colors.white,
       outline: AppColors.n200,
     );
-    return _build(scheme, AppTypography.light(), AppTokens.lightFor(p));
+    return _build(scheme, AppTypography.light(), AppTokens.lightFor(p), finwiseTok);
   }
 
   static ThemeData dark([AppPalette? palette]) {
-    final p = palette ?? AppPalette.royalIndigo;
+    final p = palette ?? AppPalette.finwiseGreen;
+    final finwisePalette = FinwisePalette.byId(p.id);
+    final finwiseTok = FinwiseTokens.darkFor(finwisePalette);
     final scheme = ColorScheme.fromSeed(
       seedColor: p.seed,
       brightness: Brightness.dark,
     ).copyWith(
       primary: p.primaryDark,
       onPrimary: Color.lerp(p.primaryDark, Colors.black, 0.72)!,
-      primaryContainer: Color.lerp(p.primaryDark, Colors.black, 0.6)!,
-      onPrimaryContainer: Color.lerp(p.primaryDark, Colors.white, 0.85)!,
+      primaryContainer: Color.lerp(p.primaryDark, Colors.black, 0.70)!,
+      onPrimaryContainer: Color.lerp(p.primaryDark, Colors.white, 0.88)!,
       secondary: AppColors.n300,
       onSecondary: AppColors.n900,
       surface: AppColors.dSurface,
@@ -49,15 +55,18 @@ abstract final class AppTheme {
       onError: AppColors.n900,
       outline: AppColors.dOutline,
     );
-    return _build(scheme, AppTypography.dark(), AppTokens.darkFor(p));
+    return _build(scheme, AppTypography.dark(), AppTokens.darkFor(p), finwiseTok);
   }
 
   static ThemeData _build(
-      ColorScheme scheme, TextTheme text, AppTokens tokens) {
+      ColorScheme scheme, TextTheme text, AppTokens tokens, FinwiseTokens finwiseTokens) {
     final isDark = scheme.brightness == Brightness.dark;
     final surface = scheme.surface;
     final outline = scheme.outline;
     final iconBrightness = isDark ? Brightness.light : Brightness.dark;
+
+    final legacyPal = (isDark ? legacy.AppPalette.dark : legacy.AppPalette.light)
+        .copyWith(primary: tokens.primary);
 
     return ThemeData(
       useMaterial3: true,
@@ -65,7 +74,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor:
           isDark ? AppColors.dBg : const Color(0xFFF6F8FA),
       textTheme: text,
-      extensions: [tokens, isDark ? legacy.AppPalette.dark : legacy.AppPalette.light],
+      extensions: [tokens, legacyPal, finwiseTokens],
       dividerTheme: DividerThemeData(color: outline, thickness: 1, space: 1),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -166,9 +175,24 @@ abstract final class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
-          textStyle: WidgetStatePropertyAll(text.labelLarge),
+          textStyle: WidgetStatePropertyAll(text.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
           shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return isDark ? tokens.primary : tokens.primary;
+            }
+            return isDark ? tokens.surfaceVariant : tokens.surface;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return isDark ? const Color(0xFF04211A) : Colors.white;
+            }
+            return tokens.textSecondary;
+          }),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: outline),
+          ),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
