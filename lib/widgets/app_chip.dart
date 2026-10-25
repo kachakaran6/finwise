@@ -23,13 +23,13 @@ class AppChip extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final backgroundColor = selected
-        ? tokens.primaryContainer
+        ? (isDark ? tokens.primaryContainer.withValues(alpha: 0.90) : tokens.primary)
         : (isDark ? tokens.surfaceVariant : tokens.surface);
     final foregroundColor = selected
-        ? tokens.onPrimaryContainer
+        ? (isDark ? tokens.primary : Colors.white)
         : tokens.textSecondary;
     final borderColor = selected
-        ? tokens.primary.withValues(alpha: 0.5)
+        ? tokens.primary
         : tokens.outline;
 
     return Material(

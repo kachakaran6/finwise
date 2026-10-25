@@ -14,10 +14,13 @@ class CategoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.pal;
+    final t = Theme.of(context).textTheme;
     final list = searchCatalog('', category: category);
+    final catColor = categoryAccent(context, category);
 
     return Scaffold(
-      backgroundColor: context.pal.bg,
+      backgroundColor: p.bg,
       body: Column(
         children: [
           AppHeader(title: category.label),
@@ -28,23 +31,53 @@ class CategoryPage extends StatelessWidget {
                     title: 'No calculators',
                     message: 'No calculators found in ${category.label}.',
                   )
-                : ListView.separated(
+                : ListView(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.screen,
-                      AppSpacing.md,
+                      AppSpacing.sm,
                       AppSpacing.screen,
                       AppSpacing.xxxl,
                     ),
-                    itemCount: list.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSpacing.cardGap),
-                    itemBuilder: (context, i) {
-                      final d = list[i];
-                      return CalcTile(
-                        def: d,
-                        onTap: () => openCalc(context, d),
-                      );
-                    },
+                    children: [
+                      // Category Hero banner
+                      AppCard(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                        child: Row(
+                          children: [
+                            IconBadge(
+                              iconForCategory(category),
+                              color: catColor,
+                              size: 44,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    category.label,
+                                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${list.length} ${list.length == 1 ? 'calculator' : 'calculators'} available offline',
+                                    style: t.bodySmall?.copyWith(color: p.inkMuted),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      for (int i = 0; i < list.length; i++) ...[
+                        if (i > 0) const SizedBox(height: AppSpacing.cardGap),
+                        CalcTile(
+                          def: list[i],
+                          onTap: () => openCalc(context, list[i]),
+                        ),
+                      ],
+                    ],
                   ),
           ),
         ],

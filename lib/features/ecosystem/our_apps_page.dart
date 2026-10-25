@@ -273,7 +273,17 @@ class _AppCardItem extends StatelessWidget {
               const SizedBox(width: Sp.sm),
               if (app.status.isAvailable && app.playStoreUrl.isNotEmpty)
                 FilledButton.tonalIcon(
-                  onPressed: () => PlayService.openUrl(app.playStoreUrl),
+                  onPressed: () async {
+                    final ok = await PlayService.openUrl(app.playStoreUrl);
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not open link. Please check your browser or connection.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
                   icon: const Icon(PhosphorIconsRegular.arrowSquareOut, size: 16),
                   label: const Text('View App'),
                   style: FilledButton.styleFrom(

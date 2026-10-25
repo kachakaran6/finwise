@@ -35,11 +35,11 @@ class _CatalogPageState extends State<CatalogPage> with ScrollDividerMixin {
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.screen,
               AppSpacing.md,
               AppSpacing.screen,
-              AppSpacing.navClearance + AppSpacing.lg,
+              AppSpacing.bottomNavClearance(context),
             ),
             children: [
               SearchField(

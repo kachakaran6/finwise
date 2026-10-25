@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../app/theme/tokens.dart';
+import '../../design_system/components/finwise_badge.dart';
 import '../../domain/calculators/catalog.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
@@ -46,17 +47,32 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
         AppHeader(
           title: 'Finwise',
           scrolled: scrolled,
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: AppSpacing.screen),
+              child: FinwiseOfflineBadge(),
+            ),
+          ],
         ),
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.screen,
-              AppSpacing.md,
+              AppSpacing.xs,
               AppSpacing.screen,
-              AppSpacing.navClearance + AppSpacing.lg,
+              AppSpacing.bottomNavClearance(context),
             ),
             children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Text(
+                  'Private by design. No account, no network.',
+                  style: t.bodyMedium?.copyWith(
+                    color: context.pal.inkMuted,
+                  ),
+                ),
+              ),
               SearchField(controller: _search, onChanged: (v) => setState(() => _q = v)),
               if (_q.trim().isNotEmpty) ...[
                 SectionHeader('${results.length} result${results.length == 1 ? '' : 's'}'),
@@ -110,27 +126,35 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: AppSpacing.cardGap,
                   crossAxisSpacing: AppSpacing.cardGap,
-                  childAspectRatio: 1.40,
+                  childAspectRatio: 1.45,
                   children: [
-                    for (final c in CalcCategory.values)
+                    for (final c in [
+                      CalcCategory.growth,
+                      CalcCategory.loans,
+                      CalcCategory.planning,
+                      CalcCategory.returns,
+                    ])
                       Builder(builder: (ctx) {
                         final catColor = categoryAccent(ctx, c);
                         return AppCard(
                           onTap: () => Navigator.of(ctx).push(
                             MaterialPageRoute(builder: (_) => CategoryPage(category: c)),
                           ),
-                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          padding: const EdgeInsets.all(AppSpacing.md),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconBadge(iconForCategory(c), size: 40, color: catColor),
+                              IconBadge(iconForCategory(c), size: 36, color: catColor),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     c.label,
-                                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                                    style: t.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -150,6 +174,55 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                       }),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.cardGap),
+                Builder(builder: (ctx) {
+                  const c = CalcCategory.utilities;
+                  final catColor = categoryAccent(ctx, c);
+                  return AppCard(
+                    onTap: () => Navigator.of(ctx).push(
+                      MaterialPageRoute(builder: (_) => const CategoryPage(category: c)),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.md,
+                    ),
+                    child: Row(
+                      children: [
+                        IconBadge(iconForCategory(c), size: 36, color: catColor),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                c.label,
+                                style: t.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _calcCount(c),
+                                style: t.bodyMedium?.copyWith(
+                                  color: context.pal.inkSubtle,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          PhosphorIconsRegular.caretRight,
+                          size: 16,
+                          color: context.pal.inkSubtle,
+                        ),
+                      ],
+                    ),
+                  );
+                }),
                 const SectionHeader('Popular'),
                 for (int i = 0; i < _popularIds.length; i++) ...[
                   if (i > 0) const SizedBox(height: AppSpacing.cardGap),

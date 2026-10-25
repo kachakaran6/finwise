@@ -130,11 +130,11 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
             Expanded(
               child: ListView(
                 controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.screen,
                   AppSpacing.sm,
                   AppSpacing.screen,
-                  AppSpacing.navClearance + AppSpacing.lg,
+                  AppSpacing.bottomNavClearance(context),
                 ),
                 children: [
                   if (list.isEmpty)
