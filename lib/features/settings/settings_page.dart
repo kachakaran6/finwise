@@ -74,11 +74,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
         Expanded(
           child: ListView(
             controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.screen,
               AppSpacing.sm,
               AppSpacing.screen,
-              AppSpacing.navClearance + AppSpacing.xl,
+              AppSpacing.bottomNavClearance(context),
             ),
             children: [
               const SectionTitle('Appearance'),
@@ -90,13 +90,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                     SizedBox(
                       width: double.infinity,
                       child: SegmentedButton<ThemeMode>(
+                        emptySelectionAllowed: true,
                         showSelectedIcon: false,
                         segments: const [
-                          ButtonSegment(
-                            value: ThemeMode.system,
-                            icon: Icon(PhosphorIconsRegular.deviceMobile, size: 18),
-                            label: Text('System'),
-                          ),
                           ButtonSegment(
                             value: ThemeMode.light,
                             icon: Icon(PhosphorIconsRegular.sun, size: 18),
@@ -108,8 +104,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                             label: Text('Dark'),
                           ),
                         ],
-                        selected: {s.themeMode},
-                        onSelectionChanged: (set) => n.setTheme(set.first),
+                        selected: s.themeMode == ThemeMode.light
+                            ? const {ThemeMode.light}
+                            : s.themeMode == ThemeMode.dark
+                                ? const {ThemeMode.dark}
+                                : (Theme.of(context).brightness == Brightness.dark
+                                    ? const {ThemeMode.dark}
+                                    : const <ThemeMode>{}),
+                        onSelectionChanged: (set) {
+                          if (set.isNotEmpty) {
+                            n.setTheme(set.first);
+                          } else {
+                            n.setTheme(s.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -391,41 +399,63 @@ class ThemeColorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.md,
-      children: AppPalette.all.map((p) {
-        final selected = selectedPaletteId == p.id;
-        final onSurface = Theme.of(context).colorScheme.onSurface;
-        return Semantics(
-          label: 'Theme colour: ${p.name}',
-          selected: selected,
-          button: true,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            onTap: () => onPaletteSelected(p),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [p.primaryLight, p.primaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: selected ? onSurface : Colors.transparent,
-                  width: 2,
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalWidth = constraints.maxWidth;
+        final count = AppPalette.all.length;
+        // Optimal size between 36 and 42 dp to guarantee single-line fit with breathing room
+        final size = ((totalWidth - ((count - 1) * 8)) / count).clamp(36.0, 42.0);
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: AppPalette.all.map((p) {
+            final selected = selectedPaletteId == p.id;
+            return Semantics(
+              label: 'Theme colour: ${p.name}',
+              selected: selected,
+              button: true,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                onTap: () => onPaletteSelected(p),
+                child: Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [p.primaryLight, p.primaryDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: selected ? onSurface : Colors.transparent,
+                      width: 2.5,
+                    ),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: p.primaryLight.withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: selected
+                      ? Icon(
+                          Icons.check,
+                          color: p.id == 'amber_gold' ? const Color(0xFF0F172A) : Colors.white,
+                          size: size * 0.48,
+                        )
+                      : null,
                 ),
               ),
-              child: selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 20)
-                  : null,
-            ),
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }

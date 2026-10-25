@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter/services.dart';
+
 import '../features/shell/shell.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_theme.dart';
@@ -19,6 +21,20 @@ class FinanceApp extends ConsumerWidget {
       themeMode: settings.themeMode,
       theme: AppTheme.light(palette),
       darkTheme: AppTheme.dark(palette),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final iconBrightness = isDark ? Brightness.light : Brightness.dark;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: iconBrightness,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness: iconBrightness,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const Shell(),
     );
   }

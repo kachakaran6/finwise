@@ -12,7 +12,7 @@ final repoProvider = Provider<ScenarioRepository>((_) => throw UnimplementedErro
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
-    this.paletteId = 'royal_indigo',
+    this.paletteId = 'finwise_green',
     this.currency = 'INR',
     this.locale = 'en_IN',
     this.favorites = const [],
@@ -47,7 +47,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   AppSettings build() {
     _p = ref.read(prefsProvider);
     final theme = _p.getString('theme') ?? _p.getString('theme_mode') ?? 'system';
-    final palette = _p.getString('theme_palette') ?? 'royal_indigo';
+    final palette = _p.getString('theme_palette') ?? 'finwise_green';
     return AppSettings(
       themeMode: ThemeMode.values.firstWhere((m) => m.name == theme, orElse: () => ThemeMode.system),
       paletteId: palette,
