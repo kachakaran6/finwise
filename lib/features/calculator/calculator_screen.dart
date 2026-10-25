@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../app/providers.dart';
 import '../../app/theme/tokens.dart';
+import '../../core/format.dart';
 import '../../core/play_service.dart';
 import '../../core/validation.dart';
 import '../../domain/models/calc.dart';
@@ -12,6 +13,7 @@ import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../../shared/widgets/result_view.dart';
 import '../../theme/app_radius.dart';
+import 'pdf_preview_screen.dart';
 
 String _initialText(Object? v) {
   if (v is! num) return '';
@@ -92,6 +94,25 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     toast(context, 'Saved.');
   }
 
+  void _exportPdf(InputState st, CalcResult? result, Fmt fmt) {
+    HapticFeedback.lightImpact();
+    if (!st.valid || result == null) {
+      setState(() => _showAll = true);
+      toast(context, 'Complete all required fields to export the PDF report.');
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PdfPreviewScreen(
+          def: widget.def,
+          state: st,
+          result: result,
+          fmt: fmt,
+        ),
+      ),
+    );
+  }
+
   Future<bool> _confirmDiscard() async {
     if (!_dirty) return true;
     return confirm(
@@ -144,6 +165,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   onPressed: () => ref.read(settingsProvider.notifier).toggleFavorite(def.id),
                 ),
                 AppHeaderAction(
+                  icon: PhosphorIconsRegular.filePdf,
+                  tooltip: 'Export PDF Report',
+                  onPressed: () => _exportPdf(st, result, fmt),
+                ),
+                AppHeaderAction(
                   icon: PhosphorIconsRegular.arrowCounterClockwise,
                   tooltip: 'Reset to defaults',
                   onPressed: _reset,
@@ -183,6 +209,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         onPressed: () => _save(st, result!),
                         icon: Icon(_saved == null ? PhosphorIconsRegular.bookmarkSimple : PhosphorIconsRegular.check, size: 20),
                         label: Text(_saved == null ? 'Save scenario' : 'Update saved scenario'),
+                      ),
+                      const SizedBox(height: Sp.sm),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                          side: BorderSide(color: p.outline),
+                          foregroundColor: p.ink,
+                        ),
+                        onPressed: () => _exportPdf(st, result, fmt),
+                        icon: const Icon(PhosphorIconsRegular.filePdf, size: 20),
+                        label: const Text('Export PDF Report'),
                       ),
                     ] else
                       AppCard(

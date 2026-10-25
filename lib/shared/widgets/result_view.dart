@@ -172,15 +172,19 @@ class _Segments extends StatelessWidget {
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
-                    color: i == index ? p.surface : Colors.transparent,
+                    color: i == index
+                        ? p.primary.withValues(alpha: isDark ? 0.22 : 0.12)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     boxShadow: (i == index && !isDark) ? AppElevation.e1Light : null,
-                    border: (i == index && isDark) ? Border.all(color: p.outline, width: 1) : null,
+                    border: i == index
+                        ? Border.all(color: p.primary.withValues(alpha: 0.35), width: 1)
+                        : null,
                   ),
                   child: Text(
                     labels[i],
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: i == index ? p.ink : p.inkMuted,
+                          color: i == index ? p.primary : p.inkMuted,
                           fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 13,
                         ),
