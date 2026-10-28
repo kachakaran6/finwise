@@ -1,6 +1,5 @@
-- Added professional offline PDF report export across all financial calculators
-- Integrated executive summary cards, formula breakdowns, and amortization schedules
-- Added direct document sharing and print capabilities
-- Redesigned adaptive navigation dock for seamless screen transitions
-- Refined theme controls with dedicated Light and Dark modes and distinct color palettes
-- 100% private, offline calculations with zero data tracking
+• New Contextual Keyboard Presets: Quick-suggestion chips appear right above the keyboard for instant amount, rate, and tenure entry
+• Compact & Clean Layout: Refined vertical spacing and category card proportions for seamless navigation
+• Synchronized Accent Themes: Unified palette styling across category icons, input badges, and financial charts
+• Enhanced Compound Interest: High-precision calculations with day, month, and year duration support
+• 100% private, offline calculations

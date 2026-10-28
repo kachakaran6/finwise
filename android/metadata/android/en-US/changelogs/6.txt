@@ -1,0 +1,5 @@
+• New Contextual Keyboard Presets: Quick-suggestion chips appear right above the keyboard for instant amount, rate, and tenure entry
+• Compact & Clean Layout: Refined vertical spacing and category card proportions for seamless navigation
+• Synchronized Accent Themes: Unified palette styling across category icons, input badges, and financial charts
+• Enhanced Compound Interest: High-precision calculations with day, month, and year duration support
+• 100% private, offline calculations
