@@ -5,7 +5,6 @@ import '../theme/finwise_elevation.dart';
 import '../theme/finwise_shapes.dart';
 import '../theme/finwise_spacing.dart';
 import '../theme/finwise_tokens.dart';
-import 'finwise_glass_surface.dart';
 
 class FinwiseNavItem {
   const FinwiseNavItem({
@@ -58,48 +57,44 @@ class FinwiseNavBar extends StatelessWidget {
         FinwiseSpacing.screen,
         bottomInset + FinwiseSpacing.md,
       ),
-      child: FinwiseGlassSurface(
-        borderRadius: FinwiseShapes.pill,
-        blur: 18,
-        thickness: 20,
-        frost: isDark ? 0.08 : 0.04,
-        tintColor: isDark
-            ? tokens.surface.withValues(alpha: 0.85)
-            : Colors.white.withValues(alpha: 0.90),
-        borderColor: isDark
-            ? Colors.white.withValues(alpha: 0.14)
-            : tokens.outline.withValues(alpha: 0.85),
-        boxShadow: isDark
-            ? FinwiseElevation.navShadowDark
-            : FinwiseElevation.navShadowLight,
-        child: Container(
-          height: FinwiseSpacing.navBarHeight,
-          padding: const EdgeInsets.symmetric(horizontal: FinwiseSpacing.sm, vertical: 6),
-          child: Row(
-            children: [
-              for (int i = 0; i < items.length; i++)
-                Expanded(
-                  flex: i == currentIndex ? 2 : 1,
-                  child: Semantics(
-                    button: true,
-                    selected: i == currentIndex,
-                    label: items[i].semanticLabel ?? items[i].label,
-                    child: _NavBarTab(
-                      item: items[i],
-                      isSelected: i == currentIndex,
-                      duration: duration,
-                      tokens: tokens,
-                      onTap: () {
-                        if (i != currentIndex) {
-                          HapticFeedback.selectionClick();
-                          onTap(i);
-                        }
-                      },
-                    ),
+      child: Container(
+        height: FinwiseSpacing.navBarHeight,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF151C28) : Colors.white,
+          borderRadius: FinwiseShapes.pill,
+          border: Border.all(
+            color: isDark ? const Color(0xFF2A3340) : tokens.outline,
+            width: 1.0,
+          ),
+          boxShadow: isDark
+              ? FinwiseElevation.navShadowDark
+              : FinwiseElevation.navShadowLight,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: FinwiseSpacing.sm, vertical: 6),
+        child: Row(
+          children: [
+            for (int i = 0; i < items.length; i++)
+              Expanded(
+                flex: i == currentIndex ? 2 : 1,
+                child: Semantics(
+                  button: true,
+                  selected: i == currentIndex,
+                  label: items[i].semanticLabel ?? items[i].label,
+                  child: _NavBarTab(
+                    item: items[i],
+                    isSelected: i == currentIndex,
+                    duration: duration,
+                    tokens: tokens,
+                    onTap: () {
+                      if (i != currentIndex) {
+                        HapticFeedback.selectionClick();
+                        onTap(i);
+                      }
+                    },
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../design_system/components/finwise_glass_surface.dart';
 import '../theme/app_elevation.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -51,47 +50,43 @@ class AppBottomNav extends StatelessWidget {
         AppSpacing.screen,
         bottom + AppSpacing.md,
       ),
-      child: FinwiseGlassSurface(
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        blur: 20,
-        thickness: 22,
-        frost: isDark ? 0.08 : 0.04,
-        tintColor: isDark
-            ? tokens.surface.withValues(alpha: 0.85)
-            : Colors.white.withValues(alpha: 0.90),
-        borderColor: isDark
-            ? Colors.white.withValues(alpha: 0.14)
-            : tokens.outline.withValues(alpha: 0.90),
-        boxShadow: isDark ? AppElevation.e2Dark : AppElevation.e2Light,
-        child: SizedBox(
-          height: 64,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
-            child: Row(
-              children: [
-                for (int i = 0; i < items.length; i++)
-                  Expanded(
-                    flex: i == currentIndex ? 2 : 1,
-                    child: Semantics(
-                      button: true,
-                      selected: i == currentIndex,
-                      label: items[i].semanticLabel ?? items[i].label,
-                      child: _NavBarItem(
-                        data: items[i],
-                        isSelected: i == currentIndex,
-                        duration: duration,
-                        tokens: tokens,
-                        onTap: () {
-                          if (i != currentIndex) {
-                            HapticFeedback.selectionClick();
-                            onTap(i);
-                          }
-                        },
-                      ),
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF151C28) : Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: isDark ? const Color(0xFF2A3340) : tokens.outline,
+            width: 1.0,
+          ),
+          boxShadow: isDark ? AppElevation.e2Dark : AppElevation.e2Light,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
+          child: Row(
+            children: [
+              for (int i = 0; i < items.length; i++)
+                Expanded(
+                  flex: i == currentIndex ? 2 : 1,
+                  child: Semantics(
+                    button: true,
+                    selected: i == currentIndex,
+                    label: items[i].semanticLabel ?? items[i].label,
+                    child: _NavBarItem(
+                      data: items[i],
+                      isSelected: i == currentIndex,
+                      duration: duration,
+                      tokens: tokens,
+                      onTap: () {
+                        if (i != currentIndex) {
+                          HapticFeedback.selectionClick();
+                          onTap(i);
+                        }
+                      },
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

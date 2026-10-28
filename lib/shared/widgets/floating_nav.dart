@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../design_system/components/finwise_glass_surface.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_tokens.dart';
 
@@ -58,103 +57,99 @@ class FloatingNavBar extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: RepaintBoundary(
-            child: FinwiseGlassSurface(
-              borderRadius: BorderRadius.circular(dockHeight / 2),
-              blur: 16,
-              thickness: 16,
-              frost: isDark ? 0.08 : 0.03,
-              tintColor: isDark
-                  ? tokens.surface.withValues(alpha: 0.88)
-                  : Colors.white.withValues(alpha: 0.94),
-              borderColor: isDark
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : tokens.outline.withValues(alpha: 0.85),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.38)
-                      : const Color(0x0C0F172A),
-                  blurRadius: 18,
-                  offset: const Offset(0, 4),
-                  spreadRadius: 0,
+            child: Container(
+              height: dockHeight,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF151C28) : Colors.white,
+                borderRadius: BorderRadius.circular(dockHeight / 2),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF2A3340) : tokens.outline,
+                  width: 1.0,
                 ),
-              ],
-              child: SizedBox(
-                height: dockHeight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final totalWidth = constraints.maxWidth;
-                      final itemCount = items.length;
-                      final slotWidth = totalWidth / itemCount;
-                      final indicatorWidth = slotWidth - 4;
-                      final clampedIndex = index.clamp(0, itemCount - 1);
-                      final indicatorLeft = clampedIndex * slotWidth + 2;
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.45)
+                        : const Color(0x140F172A),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final totalWidth = constraints.maxWidth;
+                    final itemCount = items.length;
+                    final slotWidth = totalWidth / itemCount;
+                    final indicatorWidth = slotWidth - 4;
+                    final clampedIndex = index.clamp(0, itemCount - 1);
+                    final indicatorLeft = clampedIndex * slotWidth + 2;
 
-                      return Stack(
-                        alignment: Alignment.centerLeft,
-                        children: [
-                          // Sliding active indicator pill
-                          AnimatedPositioned(
-                            left: indicatorLeft,
-                            top: 0,
-                            bottom: 0,
-                            width: indicatorWidth,
-                            duration: duration,
-                            curve: Curves.easeOutCubic,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: tokens.primary.withValues(alpha: isDark ? 0.18 : 0.11),
-                                borderRadius: BorderRadius.circular((dockHeight - 8) / 2),
-                                border: Border.all(
-                                  color: tokens.primary.withValues(alpha: isDark ? 0.30 : 0.22),
-                                  width: 1.0,
-                                ),
+                    return Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        // Sliding active indicator pill
+                        AnimatedPositioned(
+                          left: indicatorLeft,
+                          top: 0,
+                          bottom: 0,
+                          width: indicatorWidth,
+                          duration: duration,
+                          curve: Curves.easeOutCubic,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: tokens.primary.withValues(alpha: isDark ? 0.20 : 0.12),
+                              borderRadius: BorderRadius.circular((dockHeight - 8) / 2),
+                              border: Border.all(
+                                color: tokens.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+                                width: 1.0,
                               ),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: Container(
-                                  width: 14,
-                                  height: 2.5,
-                                  margin: const EdgeInsets.only(top: 2),
-                                  decoration: BoxDecoration(
-                                    color: tokens.primary,
-                                    borderRadius: BorderRadius.circular(1.5),
-                                  ),
+                            ),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                width: 14,
+                                height: 2.5,
+                                margin: const EdgeInsets.only(top: 2),
+                                decoration: BoxDecoration(
+                                  color: tokens.primary,
+                                  borderRadius: BorderRadius.circular(1.5),
                                 ),
                               ),
                             ),
                           ),
-                          // Destination items
-                          Row(
-                            children: [
-                              for (var i = 0; i < itemCount; i++)
-                                Expanded(
-                                  child: Semantics(
-                                    button: true,
+                        ),
+                        // Destination items
+                        Row(
+                          children: [
+                            for (var i = 0; i < itemCount; i++)
+                              Expanded(
+                                child: Semantics(
+                                  button: true,
+                                  selected: i == index,
+                                  label: items[i].semanticLabel,
+                                  child: _NavItem(
+                                    data: items[i],
                                     selected: i == index,
-                                    label: items[i].semanticLabel,
-                                    child: _NavItem(
-                                      data: items[i],
-                                      selected: i == index,
-                                      duration: duration,
-                                      tokens: tokens,
-                                      onTap: () {
-                                        if (i != index) {
-                                          HapticFeedback.lightImpact();
-                                          onChanged(i);
-                                        }
-                                      },
-                                    ),
+                                    duration: duration,
+                                    tokens: tokens,
+                                    onTap: () {
+                                      if (i != index) {
+                                        HapticFeedback.lightImpact();
+                                        onChanged(i);
+                                      }
+                                    },
                                   ),
                                 ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
