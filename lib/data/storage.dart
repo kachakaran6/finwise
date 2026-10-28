@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import '../domain/models/calc.dart';
 import '../features/custom_studio/data/custom_calc_repository.dart';
 
 /// Local-first scenario storage (SQLite). Works fully offline.

@@ -15,8 +15,8 @@ class CustomCalcDefinition {
     this.isDraft = false,
     this.inputs = const [],
     this.outputs = const [],
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt = 0,
+    this.updatedAt = 0,
   });
 
   final String id;

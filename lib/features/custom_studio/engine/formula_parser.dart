@@ -172,7 +172,7 @@ class FormulaParser {
         break;
       case 'round':
         if (args.isEmpty || args.length > 2) {
-          throw ParseException(
+          throw const ParseException(
               'Function "round" requires 1 or 2 arguments: round(value, [digits])');
         }
         break;
