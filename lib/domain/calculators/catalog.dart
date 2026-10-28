@@ -334,8 +334,9 @@ CalcResult _goalContribution(CalcInputs x) {
   final begin = x.s('timing') == 'begin';
   final i = periodicRate(r, k, effective: eff);
   final n = periodsFor(x.n('years'), k);
-  if (target <= 0)
+  if (target <= 0) {
     throw CalcException('Target amount must be greater than zero.');
+  }
   final c = goalContribution(target, i, n, begin: begin);
   final pr =
       project(n: n, i: i, contribution: (_) => c, perYear: k, begin: begin);
@@ -505,8 +506,9 @@ List<FieldDef> _loanFields() => [
   final i = periodicRate(x.n('rate'), 12, effective: eff);
   final months = x.s('unit') == 'years' ? x.n('tenure') * 12 : x.n('tenure');
   final n = months.round();
-  if (n < 1 || n > 1200)
+  if (n < 1 || n > 1200) {
     throw CalcException('Loan term must be between 1 and 1200 months.');
+  }
   return (principal: p, i: i, n: n, rows: amortize(p, i, n));
 }
 
@@ -595,8 +597,9 @@ CalcResult _savingsGoal(CalcInputs x) {
   final grow = x.s('growth') == 'grow';
   final n = periodsFor(x.n('years'), 12);
   final i = r / 1200;
-  if (target <= 0)
+  if (target <= 0) {
     throw CalcException('Target amount must be greater than zero.');
+  }
   double existing(int p) => grow ? current * pw(1 + i, p.toDouble()) : current;
   final remaining = math.max(0.0, target - existing(n));
   final c = remaining == 0 ? 0.0 : goalContribution(remaining, i, n);
@@ -681,9 +684,10 @@ CalcResult _percentage(CalcInputs x) {
           note =
               'Original = amount ÷ (1 + %): the amount before the percentage was added.';
         default:
-          if (1 - p == 0)
+          if (1 - p == 0) {
             throw CalcException(
                 'Percentage cannot be 100% for this operation.');
+          }
           res = b / (1 - p);
           note =
               'Original = amount ÷ (1 − %): the amount before the percentage was removed.';

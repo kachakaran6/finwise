@@ -96,7 +96,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   ],
               ] else ...[
                 if (favs.isNotEmpty) ...[
-                  const SectionHeader('Favourites'),
+                  const SectionHeader('Favourites',
+                      topSpacing: 16, bottomSpacing: 8),
                   for (int i = 0; i < favs.length; i++) ...[
                     if (i > 0) const SizedBox(height: AppSpacing.cardGap),
                     CalcTile(
@@ -104,9 +105,10 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   ],
                 ],
                 if (recents.isNotEmpty) ...[
-                  const SectionHeader('Recently used'),
+                  const SectionHeader('Recently used',
+                      topSpacing: 16, bottomSpacing: 8),
                   SizedBox(
-                    height: 44,
+                    height: 36,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
@@ -118,10 +120,10 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                             categoryAccent(ctx, recents[i].category);
                         return ActionChip(
                           avatar: Icon(iconForCalc(recents[i].id),
-                              size: 16, color: catColor),
+                              size: 15, color: catColor),
                           label: Text(recents[i].name),
-                          labelStyle: t.labelLarge
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          labelStyle: t.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600, fontSize: 12),
                           backgroundColor:
                               Theme.of(ctx).colorScheme.surfaceContainerHighest,
                           side: BorderSide(
@@ -135,14 +137,15 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                     ),
                   ),
                 ],
-                const SectionHeader('Categories'),
+                const SectionHeader('Categories',
+                    topSpacing: 18, bottomSpacing: 8),
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: AppSpacing.cardGap,
-                  crossAxisSpacing: AppSpacing.cardGap,
-                  childAspectRatio: 1.45,
+                  mainAxisSpacing: AppSpacing.sm,
+                  crossAxisSpacing: AppSpacing.sm,
+                  childAspectRatio: 1.75,
                   children: [
                     for (final c in [
                       CalcCategory.growth,
@@ -157,34 +160,33 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                             MaterialPageRoute(
                                 builder: (_) => CategoryPage(category: c)),
                           ),
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconBadge(iconForCategory(c),
-                                  size: 36, color: catColor),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    c.label,
-                                    style: t.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _calcCount(c),
-                                    style: t.bodyMedium?.copyWith(
-                                      color: context.pal.inkSubtle,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                                  size: 32, color: catColor),
+                              const SizedBox(height: 6),
+                              Text(
+                                c.label,
+                                style: t.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                _calcCount(c),
+                                style: t.bodyMedium?.copyWith(
+                                  color: context.pal.inkSubtle,
+                                  fontSize: 11,
+                                ),
                               ),
                             ],
                           ),
@@ -192,7 +194,7 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                       }),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.cardGap),
+                const SizedBox(height: AppSpacing.sm),
                 Builder(builder: (ctx) {
                   const c = CalcCategory.utilities;
                   final catColor = categoryAccent(ctx, c);
@@ -203,12 +205,12 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
-                      vertical: AppSpacing.md,
+                      vertical: AppSpacing.sm,
                     ),
                     child: Row(
                       children: [
                         IconBadge(iconForCategory(c),
-                            size: 36, color: catColor),
+                            size: 32, color: catColor),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
@@ -218,17 +220,17 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                                 c.label,
                                 style: t.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 1),
                               Text(
                                 _calcCount(c),
                                 style: t.bodyMedium?.copyWith(
                                   color: context.pal.inkSubtle,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
@@ -243,7 +245,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                     ),
                   );
                 }),
-                const SectionHeader('Popular'),
+                const SectionHeader('Popular',
+                    topSpacing: 18, bottomSpacing: 8),
                 for (int i = 0; i < _popularIds.length; i++) ...[
                   if (i > 0) const SizedBox(height: AppSpacing.cardGap),
                   CalcTile(

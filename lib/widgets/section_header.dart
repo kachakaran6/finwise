@@ -7,7 +7,7 @@ class SectionHeader extends StatelessWidget {
     super.key,
     this.trailing,
     this.topSpacing = AppSpacing.sectionGap,
-    this.bottomSpacing = AppSpacing.cardGap,
+    this.bottomSpacing = AppSpacing.sm,
   });
 
   final String title;

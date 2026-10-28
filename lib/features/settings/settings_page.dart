@@ -387,11 +387,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 child: const Text('Cancel')),
             TextButton(
               onPressed: () {
-                if (confirmField && a.text.length < 8)
+                if (confirmField && a.text.length < 8) {
                   return setState(() => err = 'Use at least 8 characters');
-                if (confirmField && a.text != b.text)
+                }
+                if (confirmField && a.text != b.text) {
                   return setState(() => err = 'Passphrases do not match');
-                if (a.text.isEmpty) return;
+                }
+                if (a.text.isEmpty) {
+                  return;
+                }
                 Navigator.pop(ctx, a.text);
               },
               child: const Text('Continue'),
@@ -405,8 +409,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final scenarios = await ref.read(scenariosProvider.future);
     if (!context.mounted) return;
-    if (scenarios.isEmpty)
+    if (scenarios.isEmpty) {
       return toast(context, 'Nothing to back up yet. Save a scenario first.');
+    }
     final mode = await pickOne(context,
         title: 'Backup type',
         selected: 'enc',
@@ -459,8 +464,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
       if (context.mounted) toast(context, e.message);
       return;
     } catch (_) {
-      if (context.mounted)
+      if (context.mounted) {
         toast(context, 'Wrong passphrase, or the file is damaged.');
+      }
       return;
     }
     if (prev == null || !context.mounted) return;

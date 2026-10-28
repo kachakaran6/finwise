@@ -76,20 +76,11 @@ Color colorForCategory(CalcCategory c) {
   }
 }
 
+/// Theme-aware category accent: interactive categories and badges consistently
+/// honor the active theme primary accent (e.g. Sunset Rose pink, Emerald green, Sapphire blue),
+/// eliminating mismatched per-category color clutter while keeping semantic states distinct.
 Color categoryAccent(BuildContext context, CalcCategory c) {
-  final tok = context.tokens;
-  switch (c) {
-    case CalcCategory.growth:
-      return tok.accentGrowth;
-    case CalcCategory.loans:
-      return tok.accentLoans;
-    case CalcCategory.planning:
-      return tok.accentGoals;
-    case CalcCategory.returns:
-      return tok.accentReturns;
-    case CalcCategory.utilities:
-      return tok.accentUtilities;
-  }
+  return context.tokens.primary;
 }
 
 class SectionTitle extends StatelessWidget {
@@ -99,7 +90,7 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.sectionGap, bottom: AppSpacing.cardGap),
+        padding: const EdgeInsets.only(top: 18, bottom: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -117,7 +108,8 @@ class SectionTitle extends StatelessWidget {
 
 /// Icon badge: modern tinted container with domain accent color.
 class IconBadge extends StatelessWidget {
-  const IconBadge(this.icon, {super.key, this.size = 40, this.color, this.background});
+  const IconBadge(this.icon,
+      {super.key, this.size = 40, this.color, this.background});
   final IconData icon;
   final double size;
   final Color? color;
@@ -145,7 +137,8 @@ class IconBadge extends StatelessWidget {
 }
 
 class CalcTile extends StatelessWidget {
-  const CalcTile({super.key, required this.def, required this.onTap, this.trailing});
+  const CalcTile(
+      {super.key, required this.def, required this.onTap, this.trailing});
   final CalculatorDef def;
   final VoidCallback onTap;
   final Widget? trailing;
@@ -157,7 +150,8 @@ class CalcTile extends StatelessWidget {
 
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48),
         child: Row(
@@ -204,7 +198,11 @@ class CalcTile extends StatelessWidget {
 }
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.title, required this.message});
+  const EmptyState(
+      {super.key,
+      required this.icon,
+      required this.title,
+      required this.message});
   final IconData icon;
   final String title, message;
 
@@ -213,7 +211,8 @@ class EmptyState extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xxxl),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl, vertical: AppSpacing.xxxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -239,7 +238,11 @@ class EmptyState extends StatelessWidget {
 }
 
 class SearchField extends StatelessWidget {
-  const SearchField({super.key, required this.controller, required this.onChanged, this.hint = 'Search calculators'});
+  const SearchField(
+      {super.key,
+      required this.controller,
+      required this.onChanged,
+      this.hint = 'Search calculators'});
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String hint;
@@ -255,11 +258,13 @@ class SearchField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: p.inkSubtle, fontSize: 15),
-        prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20, color: p.inkMuted),
+        prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass,
+            size: 20, color: p.inkMuted),
         suffixIcon: controller.text.isEmpty
             ? null
             : IconButton(
-                icon: Icon(PhosphorIconsRegular.xCircle, size: 19, color: p.inkMuted),
+                icon: Icon(PhosphorIconsRegular.xCircle,
+                    size: 19, color: p.inkMuted),
                 tooltip: 'Clear search',
                 onPressed: () {
                   controller.clear();
@@ -272,7 +277,10 @@ class SearchField extends StatelessWidget {
 }
 
 /// Bottom-sheet single-choice picker (used instead of dropdown menus).
-Future<String?> pickOne(BuildContext context, {required String title, required List<ChoiceOption> options, required String selected}) {
+Future<String?> pickOne(BuildContext context,
+    {required String title,
+    required List<ChoiceOption> options,
+    required String selected}) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -281,58 +289,92 @@ Future<String?> pickOne(BuildContext context, {required String title, required L
       final p = ctx.pal;
       return SafeArea(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Padding(padding: const EdgeInsets.fromLTRB(Sp.xl, 0, Sp.xl, Sp.sm), child: Text(title, style: Theme.of(ctx).textTheme.titleMedium)),
-            Flexible(
-              child: ListView(shrinkWrap: true, children: [
-                for (final o in options)
-                  ListTile(
-                    title: Text(o.label, style: Theme.of(ctx).textTheme.bodyLarge),
-                    trailing: o.value == selected ? Icon(PhosphorIconsBold.check, color: p.primary, size: 20) : null,
-                    onTap: () => Navigator.pop(ctx, o.value),
-                  ),
+          constraints:
+              BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.75),
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(Sp.xl, 0, Sp.xl, Sp.sm),
+                    child: Text(title,
+                        style: Theme.of(ctx).textTheme.titleMedium)),
+                Flexible(
+                  child: ListView(shrinkWrap: true, children: [
+                    for (final o in options)
+                      ListTile(
+                        title: Text(o.label,
+                            style: Theme.of(ctx).textTheme.bodyLarge),
+                        trailing: o.value == selected
+                            ? Icon(PhosphorIconsBold.check,
+                                color: p.primary, size: 20)
+                            : null,
+                        onTap: () => Navigator.pop(ctx, o.value),
+                      ),
+                  ]),
+                ),
               ]),
-            ),
-          ]),
         ),
       );
     },
   );
 }
 
-Future<String?> askText(BuildContext context, {required String title, String? initial, String hint = ''}) {
+Future<String?> askText(BuildContext context,
+    {required String title, String? initial, String hint = ''}) {
   final c = TextEditingController(text: initial);
   return showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(title),
-      content: TextField(controller: c, autofocus: true, maxLength: 80, decoration: InputDecoration(hintText: hint), textCapitalization: TextCapitalization.sentences),
+      content: TextField(
+          controller: c,
+          autofocus: true,
+          maxLength: 80,
+          decoration: InputDecoration(hintText: hint),
+          textCapitalization: TextCapitalization.sentences),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        TextButton(onPressed: () => Navigator.pop(ctx, c.text.trim().isEmpty ? null : c.text.trim()), child: const Text('Save')),
+        TextButton(
+            onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(
+            onPressed: () => Navigator.pop(
+                ctx, c.text.trim().isEmpty ? null : c.text.trim()),
+            child: const Text('Save')),
       ],
     ),
   );
 }
 
-Future<bool> confirm(BuildContext context, {required String title, required String message, String action = 'Delete'}) async {
+Future<bool> confirm(BuildContext context,
+    {required String title,
+    required String message,
+    String action = 'Delete'}) async {
   final r = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-        TextButton(style: TextButton.styleFrom(foregroundColor: ctx.pal.loss), onPressed: () => Navigator.pop(ctx, true), child: Text(action)),
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel')),
+        TextButton(
+            style: TextButton.styleFrom(foregroundColor: ctx.pal.loss),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(action)),
       ],
     ),
   );
   return r ?? false;
 }
 
-void toast(BuildContext context, String msg, {String? action, VoidCallback? onAction}) {
+void toast(BuildContext context, String msg,
+    {String? action, VoidCallback? onAction}) {
   final m = ScaffoldMessenger.of(context);
   m.hideCurrentSnackBar();
-  m.showSnackBar(SnackBar(content: Text(msg), action: action == null ? null : SnackBarAction(label: action, onPressed: onAction ?? () {})));
+  m.showSnackBar(SnackBar(
+      content: Text(msg),
+      action: action == null
+          ? null
+          : SnackBarAction(label: action, onPressed: onAction ?? () {})));
 }
