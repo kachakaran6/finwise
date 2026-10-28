@@ -158,7 +158,11 @@ void main() {
         'Keyboard accessory sheet displays contextual presets on focus and updates value on tap',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1400));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(() {
+        tester.binding.setSurfaceSize(null);
+        tester.view.resetViewInsets();
+      });
 
       final compoundDef = calcById('compound')!;
 
@@ -220,6 +224,11 @@ void main() {
 
       final yearsField = tester.widget<TextField>(textFields.at(2));
       expect(yearsField.controller?.text, '15');
+
+      // 4. Dismiss keyboard (viewInsets drops to 0) -> accessory sheet must disappear immediately
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pumpAndSettle();
+      expect(find.byType(KeyboardAccessorySheet), findsNothing);
     });
 
     testWidgets('Home screen category cards honor active theme accent',

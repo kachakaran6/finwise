@@ -238,89 +238,92 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             Expanded(
               child: SafeArea(
                 top: false,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(
-                      Sp.page, Sp.sm, Sp.page, Sp.xxxl),
-                  children: [
-                    AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (final f in def.fields)
-                            if (f.visible(_choices))
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: f == def.fields.last ? 0 : Sp.lg,
-                                ),
-                                child: f.kind == FieldKind.choice
-                                    ? _choiceField(f)
-                                    : _numberField(f, st),
-                              ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: Sp.xl),
-                    if (result != null) ...[
-                      ResultView(
-                          key: ValueKey(def.id),
-                          def: def,
-                          result: result,
-                          fmt: fmt),
-                      const SizedBox(height: Sp.xl),
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.md)),
-                        ),
-                        onPressed: () => _save(st, result!),
-                        icon: Icon(
-                            _saved == null
-                                ? PhosphorIconsRegular.bookmarkSimple
-                                : PhosphorIconsRegular.check,
-                            size: 20),
-                        label: Text(_saved == null
-                            ? 'Save scenario'
-                            : 'Update saved scenario'),
-                      ),
-                      const SizedBox(height: Sp.sm),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.md)),
-                          side: BorderSide(color: p.outline),
-                          foregroundColor: p.ink,
-                        ),
-                        onPressed: () => _exportPdf(st, result, fmt),
-                        icon:
-                            const Icon(PhosphorIconsRegular.filePdf, size: 20),
-                        label: const Text('Export PDF Report'),
-                      ),
-                    ] else
+                child: GestureDetector(
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  behavior: HitTestBehavior.translucent,
+                  child: ListView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(
+                        Sp.page, Sp.sm, Sp.page, Sp.xxxl),
+                    children: [
                       AppCard(
-                        color: p.surfaceAlt,
-                        child: Row(children: [
-                          Icon(PhosphorIconsRegular.warningCircle,
-                              color: error != null ? p.loss : p.inkMuted),
-                          const SizedBox(width: Sp.md),
-                          Expanded(
-                              child: Text(
-                                  error ??
-                                      'Complete the highlighted fields to see the result.',
-                                  style: t.bodyMedium)),
-                        ]),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final f in def.fields)
+                              if (f.visible(_choices))
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: f == def.fields.last ? 0 : Sp.lg,
+                                  ),
+                                  child: f.kind == FieldKind.choice
+                                      ? _choiceField(f)
+                                      : _numberField(f, st),
+                                ),
+                          ],
+                        ),
                       ),
-                  ],
+                      const SizedBox(height: Sp.xl),
+                      if (result != null) ...[
+                        ResultView(
+                            key: ValueKey(def.id),
+                            def: def,
+                            result: result,
+                            fmt: fmt),
+                        const SizedBox(height: Sp.xl),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 52),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md)),
+                          ),
+                          onPressed: () => _save(st, result!),
+                          icon: Icon(
+                              _saved == null
+                                  ? PhosphorIconsRegular.bookmarkSimple
+                                  : PhosphorIconsRegular.check,
+                              size: 20),
+                          label: Text(_saved == null
+                              ? 'Save scenario'
+                              : 'Update saved scenario'),
+                        ),
+                        const SizedBox(height: Sp.sm),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.md)),
+                            side: BorderSide(color: p.outline),
+                            foregroundColor: p.ink,
+                          ),
+                          onPressed: () => _exportPdf(st, result, fmt),
+                          icon: const Icon(PhosphorIconsRegular.filePdf,
+                              size: 20),
+                          label: const Text('Export PDF Report'),
+                        ),
+                      ] else
+                        AppCard(
+                          color: p.surfaceAlt,
+                          child: Row(children: [
+                            Icon(PhosphorIconsRegular.warningCircle,
+                                color: error != null ? p.loss : p.inkMuted),
+                            const SizedBox(width: Sp.md),
+                            Expanded(
+                                child: Text(
+                                    error ??
+                                        'Complete the highlighted fields to see the result.',
+                                    style: t.bodyMedium)),
+                          ]),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            if (focusedField != null &&
-                focusedPresets != null &&
-                (keyboardOpen ||
-                    (_focusNodes[_focusedFieldId]?.hasFocus ?? false)))
+            if (keyboardOpen && focusedField != null && focusedPresets != null)
               KeyboardAccessorySheet(
                 fieldLabel: focusedField.label,
                 presets: focusedPresets,
