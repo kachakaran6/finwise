@@ -269,6 +269,242 @@ void main() {
     });
   });
 
+  group('comprehensive financial formula audit (C02 - C14)', () {
+    test('C02 Simple Interest: zero rate, zero time, boundary accuracy', () {
+      final calc = calcById('simple')!;
+      // Zero rate
+      final r0 = calc.compute(CalcInputs({'principal': 50000.0, 'rate': 0.0, 'years': 5.0}));
+      expect(r0.primary.value, 50000.0);
+      expect(r0.rows[1].value, 0.0);
+
+      // Standard calculation
+      final r1 = calc.compute(CalcInputs({'principal': 10000.0, 'rate': 7.5, 'years': 3.0}));
+      // I = 10000 * 0.075 * 3 = 2250, Total = 12250
+      expect(r1.rows[1].value, closeTo(2250.0, 1e-9));
+      expect(r1.primary.value, closeTo(12250.0, 1e-9));
+    });
+
+    test('C03 SIP: zero return, timing comparison (begin vs end), and monotonicity', () {
+      final calc = calcById('sip')!;
+      // Zero return: total contributions = projected value
+      final rZero = calc.compute(CalcInputs({
+        'contribution': 5000.0,
+        'rate': 0.0,
+        'conv': 'nominal',
+        'freq': '12',
+        'years': 5.0,
+        'timing': 'end',
+      }));
+      expect(rZero.primary.value, 300000.0); // 5000 * 60
+      expect(rZero.rows[1].value, 0.0); // 0 estimated growth
+
+      // Timing comparison: begin of period earns interest on all payments immediately
+      final rEnd = calc.compute(CalcInputs({
+        'contribution': 10000.0,
+        'rate': 12.0,
+        'conv': 'nominal',
+        'freq': '12',
+        'years': 10.0,
+        'timing': 'end',
+      }));
+      final rBegin = calc.compute(CalcInputs({
+        'contribution': 10000.0,
+        'rate': 12.0,
+        'conv': 'nominal',
+        'freq': '12',
+        'years': 10.0,
+        'timing': 'begin',
+      }));
+      expect(rBegin.primary.value!, greaterThan(rEnd.primary.value!));
+      // In nominal monthly 12% annual = 1% monthly rate: rBegin = rEnd * (1 + 0.01)
+      expect(rBegin.primary.value!, closeTo(rEnd.primary.value! * 1.01, 0.05));
+    });
+
+    test('C04 Step-Up SIP: yearly incrementation strictly increases total compared to flat SIP', () {
+      final stepCalc = calcById('stepup')!;
+      final sipCalc = calcById('sip')!;
+      final inputs = {
+        'contribution': 10000.0,
+        'rate': 10.0,
+        'conv': 'nominal',
+        'freq': '12',
+        'years': 5.0,
+        'timing': 'end',
+      };
+      final flat = sipCalc.compute(CalcInputs(inputs));
+      final step = stepCalc.compute(CalcInputs({...inputs, 'stepup': 10.0}));
+
+      expect(step.primary.value!, greaterThan(flat.primary.value!));
+      expect(step.rows[0].value!, greaterThan(flat.rows[0].value!)); // total contributions higher
+    });
+
+    test('C05 Goal Contribution: target <= 0 validation, zero return behavior', () {
+      final calc = calcById('goal')!;
+      expect(
+        () => calc.compute(CalcInputs({
+          'target': 0.0,
+          'rate': 8.0,
+          'conv': 'nominal',
+          'freq': '12',
+          'years': 5.0,
+          'timing': 'end',
+        })),
+        throwsA(isA<CalcException>()),
+      );
+
+      // Zero return requires exact division of target by number of periods
+      final rZero = calc.compute(CalcInputs({
+        'target': 120000.0,
+        'rate': 0.0,
+        'conv': 'nominal',
+        'freq': '12',
+        'years': 10.0,
+        'timing': 'end',
+      }));
+      // 120000 / 120 = 1000 per month
+      expect(rZero.primary.value, closeTo(1000.0, 1e-9));
+      expect(rZero.rows[1].value, closeTo(120000.0, 1e-9)); // total contributions
+      expect(rZero.rows[2].value, closeTo(0.0, 1e-9)); // estimated growth
+    });
+
+    test('C06 Present Value: zero rate and discount verification', () {
+      final calc = calcById('pv')!;
+      // Zero rate: PV = FV
+      final rZero = calc.compute(CalcInputs({'target': 500000.0, 'rate': 0.0, 'years': 5.0, 'm': '1'}));
+      expect(rZero.primary.value, 500000.0);
+
+      // 10% annual discounting for 2 years: PV = 121000 / (1.1)^2 = 100000
+      final r = calc.compute(CalcInputs({'target': 121000.0, 'rate': 10.0, 'years': 2.0, 'm': '1'}));
+      expect(r.primary.value, closeTo(100000.0, 0.01));
+      expect(r.rows[1].value, closeTo(21000.0, 0.01));
+    });
+
+    test('C07 CAGR: valid range and boundary protections', () {
+      final calc = calcById('cagr')!;
+      // Doubling in 5 years: CAGR = 2^(1/5) - 1 = 14.8698%
+      final r = calc.compute(CalcInputs({'start': 100000.0, 'end': 200000.0, 'years': 5.0}));
+      expect(r.primary.value, closeTo(14.8698, 0.001));
+
+      // Ending value 0: -100%
+      final rZero = calc.compute(CalcInputs({'start': 100000.0, 'end': 0.0, 'years': 5.0}));
+      expect(rZero.primary.value, closeTo(-100.0, 1e-6));
+
+      // Invalid start <= 0
+      expect(() => calc.compute(CalcInputs({'start': 0.0, 'end': 100.0, 'years': 2.0})), throwsA(isA<CalcException>()));
+      // Invalid years <= 0
+      expect(() => calc.compute(CalcInputs({'start': 100.0, 'end': 200.0, 'years': 0.0})), throwsA(isA<CalcException>()));
+    });
+
+    test('C08 Absolute Return: distributions and costs accounting', () {
+      final calc = calcById('absret')!;
+      // Invest 100,000, sells at 120,000 with 5,000 dividend and 2,000 cost
+      // Net gain = 120000 + 5000 - 2000 - 100000 = 23000 (23%)
+      final r = calc.compute(CalcInputs({
+        'start': 100000.0,
+        'end': 120000.0,
+        'dist': 5000.0,
+        'cost': 2000.0,
+      }));
+      expect(r.primary.value, closeTo(23.0, 1e-9));
+      expect(r.rows[0].value, closeTo(23000.0, 1e-9));
+    });
+
+    test('C09 Inflation: real return fisher equation and purchasing power loss', () {
+      final calc = calcById('inflation')!;
+      // Mode = real return: 12% nominal with 6% inflation
+      // Real = (1 + 0.12) / (1 + 0.06) - 1 = 1.12 / 1.06 - 1 = 5.66038%
+      final rReal = calc.compute(CalcInputs({
+        'mode': 'real',
+        'nominal': 12.0,
+        'inflation': 6.0,
+      }));
+      expect(rReal.primary.value, closeTo(5.66038, 0.0001));
+
+      // Mode = purchasing power: 100,000 today in 10 years at 7% inflation
+      // Value in today money = 100,000 / (1.07)^10 = 50,834.93
+      final rPower = calc.compute(CalcInputs({
+        'mode': 'power',
+        'amountP': 100000.0,
+        'yearsP': 10.0,
+        'inflation': 7.0,
+      }));
+      expect(rPower.primary.value, closeTo(50834.93, 0.05));
+    });
+
+    test('C10 EMI & C11 Amortization: zero rate, monthly payments, total repayment equals loan', () {
+      final emiCalc = calcById('emi')!;
+      // Zero interest loan: EMI = Principal / N
+      final rZero = emiCalc.compute(CalcInputs({
+        'principal': 120000.0,
+        'rate': 0.0,
+        'conv': 'nominal',
+        'tenure': 1.0,
+        'unit': 'years',
+      }));
+      expect(rZero.primary.value, 10000.0); // 120000 / 12 months
+
+      // Amortization schedule integrity:
+      final amortCalc = calcById('amort')!;
+      final rAmort = amortCalc.compute(CalcInputs({
+        'principal': 500000.0,
+        'rate': 9.0,
+        'conv': 'nominal',
+        'tenure': 5.0,
+        'unit': 'years',
+      }));
+      expect(rAmort.rows[0].value, 500000.0);
+      expect(rAmort.schedule!.rows.last[5], 0.0); // closing balance is 0
+    });
+
+    test('C12 Savings Goal: existing savings growth and target boundary', () {
+      final calc = calcById('savings')!;
+      // Target 1,000,000 in 5 years at 8% with 200,000 already saved (growing)
+      final r = calc.compute(CalcInputs({
+        'target': 1000000.0,
+        'current': 200000.0,
+        'growth': 'grow',
+        'rate': 8.0,
+        'years': 5.0,
+      }));
+      expect(r.primary.value!, greaterThan(0));
+      expect(r.rows[1].value!, greaterThan(200000.0)); // grown existing savings
+    });
+
+    test('C13 Percentage: of, change, points, add, remove, undo', () {
+      final calc = calcById('percent')!;
+      // Of: 15% of 200 = 30
+      expect(calc.compute(CalcInputs({'mode': 'of', 'valA': 200.0, 'pctA': 15.0})).primary.value, 30.0);
+
+      // Change: 100 -> 125 = +25%
+      expect(calc.compute(CalcInputs({'mode': 'change', 'oldV': 100.0, 'newV': 125.0})).primary.value, 25.0);
+
+      // Points: 5% to 8% = +3 points
+      expect(calc.compute(CalcInputs({'mode': 'points', 'oldRate': 5.0, 'newRate': 8.0})).primary.value, 3.0);
+
+      // Add: 100 + 18% GST = 118
+      expect(calc.compute(CalcInputs({'mode': 'adj', 'baseAmt': 100.0, 'pctAdj': 18.0, 'adjDir': 'add'})).primary.value, 118.0);
+
+      // Undo Add: 118 undo 18% = 100
+      expect(calc.compute(CalcInputs({'mode': 'adj', 'baseAmt': 118.0, 'pctAdj': 18.0, 'adjDir': 'undo_add'})).primary.value, closeTo(100.0, 1e-9));
+    });
+
+    test('C14 Investment Comparison: Scenario A vs Scenario B delta', () {
+      final calc = calcById('compare')!;
+      final r = calc.compute(CalcInputs({
+        'yrs': 10.0,
+        'aInit': 50000.0,
+        'aRate': 8.0,
+        'aMon': 5000.0,
+        'bInit': 50000.0,
+        'bRate': 12.0,
+        'bMon': 5000.0,
+      }));
+      // Scenario B has 12% vs Scenario A's 8%, so B - A is strictly positive
+      expect(r.primary.value!, greaterThan(0));
+      expect(r.primary.value, closeTo(r.rows[1].value! - r.rows[0].value!, 1e-6));
+    });
+  });
+
   group('backup', () {
     final scenario = Scenario(
       id: 'abc123',
