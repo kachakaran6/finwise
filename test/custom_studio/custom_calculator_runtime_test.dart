@@ -1,5 +1,4 @@
 import 'package:finwise/app/providers.dart';
-import 'package:finwise/core/format.dart';
 import 'package:finwise/data/storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finwise/features/custom_studio/domain/models/custom_calc_definition.dart';

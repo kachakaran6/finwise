@@ -9,7 +9,11 @@ enum CustomInputType {
   slider,
   date,
   infoBlock,
-  sectionHeader,
+  sectionHeader;
+
+  bool get isComputational =>
+      this != CustomInputType.infoBlock &&
+      this != CustomInputType.sectionHeader;
 }
 
 class CustomChoiceOption {
