@@ -68,11 +68,13 @@ void main() {
       expect(dsFallback.id, 'finwise_green');
     });
 
-    testWidgets('App initializes with Finwise Green in System mode', (tester) async {
+    testWidgets('App initializes with Finwise Green in System mode',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(createTestAppWithOverrides(prefs: prefs, repo: repo));
+      await tester
+          .pumpWidget(createTestAppWithOverrides(prefs: prefs, repo: repo));
       await tester.pumpAndSettle();
 
       final BuildContext context = tester.element(find.text('Finwise'));
@@ -83,7 +85,8 @@ void main() {
       expect(theme.colorScheme.primary, FinwiseColors.brand600);
     });
 
-    testWidgets('Switching to Dark mode immediately updates theme to dark', (tester) async {
+    testWidgets('Switching to Dark mode immediately updates theme to dark',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -120,7 +123,8 @@ void main() {
       expect(context.tokens.primary, FinwiseColors.brand400);
     });
 
-    testWidgets('Switching to Light mode immediately updates theme to light', (tester) async {
+    testWidgets('Switching to Light mode immediately updates theme to light',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -156,7 +160,8 @@ void main() {
       expect(context.tokens.primary, FinwiseColors.brand600);
     });
 
-    testWidgets('Switching palette updates active primary accent and persists', (tester) async {
+    testWidgets('Switching palette updates active primary accent and persists',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -187,7 +192,8 @@ void main() {
       expect(context.tokens.primary, const Color(0xFF2563EB));
     });
 
-    testWidgets('FinwiseGlassSurface renders children safely with fallback', (tester) async {
+    testWidgets('FinwiseGlassSurface renders children safely with fallback',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -203,7 +209,9 @@ void main() {
       expect(find.text('Liquid Glass Content'), findsOneWidget);
     });
 
-    testWidgets('FloatingNavBar renders without overflow and highlights active tab with emerald', (tester) async {
+    testWidgets(
+        'FloatingNavBar renders without overflow and highlights active tab with emerald',
+        (tester) async {
       int activeIndex = 0;
       await tester.binding.setSurfaceSize(const Size(400, 800));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -220,10 +228,14 @@ void main() {
               return Scaffold(
                 bottomNavigationBar: FloatingNavBar(
                   items: const [
-                    NavItemData('Home', PhosphorIconsRegular.house, PhosphorIconsFill.house, 'Home'),
-                    NavItemData('Calculators', PhosphorIconsRegular.calculator, PhosphorIconsFill.calculator, 'Calculators'),
-                    NavItemData('Saved', PhosphorIconsRegular.bookmarkSimple, PhosphorIconsFill.bookmarkSimple, 'Saved'),
-                    NavItemData('Settings', PhosphorIconsRegular.gearSix, PhosphorIconsFill.gearSix, 'Settings'),
+                    NavItemData('Home', PhosphorIconsRegular.house,
+                        PhosphorIconsFill.house, 'Home'),
+                    NavItemData('Calculators', PhosphorIconsRegular.calculator,
+                        PhosphorIconsFill.calculator, 'Calculators'),
+                    NavItemData('Saved', PhosphorIconsRegular.bookmarkSimple,
+                        PhosphorIconsFill.bookmarkSimple, 'Saved'),
+                    NavItemData('Settings', PhosphorIconsRegular.gearSix,
+                        PhosphorIconsFill.gearSix, 'Settings'),
                   ],
                   index: activeIndex,
                   onChanged: (i) => setState(() => activeIndex = i),
@@ -246,9 +258,11 @@ void main() {
       expect(find.text('Calculators'), findsOneWidget);
     });
 
-    test('WCAG 2.1 AA mathematical relative luminance contrast verification', () {
-      double channelLuminance(double v) =>
-          v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+    test('WCAG 2.1 AA mathematical relative luminance contrast verification',
+        () {
+      double channelLuminance(double v) => v <= 0.03928
+          ? v / 12.92
+          : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
       double relLum(Color c) =>
           0.2126 * channelLuminance(c.r) +
           0.7152 * channelLuminance(c.g) +
@@ -274,7 +288,8 @@ void main() {
       expect(contrast(FinwiseColors.lossLight, Colors.white), greaterThan(4.5));
 
       // 5. Dark Mode Text on Dark Surface >= 14.0:1 (AAA)
-      expect(contrast(FinwiseColors.n100, FinwiseColors.darkSurface), greaterThan(14.0));
+      expect(contrast(FinwiseColors.n100, FinwiseColors.darkSurface),
+          greaterThan(14.0));
     });
 
     test('Nav clearance consistency across token systems', () {
@@ -282,7 +297,8 @@ void main() {
       expect(AppSpacing.navClearance, 112.0);
     });
 
-    test('All 6 palettes are synchronized across FinwisePalette and AppPalette', () {
+    test('All 6 palettes are synchronized across FinwisePalette and AppPalette',
+        () {
       expect(FinwisePalette.all.length, 6);
       expect(AppPalette.all.length, 6);
 

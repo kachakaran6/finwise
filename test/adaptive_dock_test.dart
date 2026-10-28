@@ -14,10 +14,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const items = [
-    NavItemData('Home', PhosphorIconsRegular.house, PhosphorIconsFill.house, 'Home'),
-    NavItemData('Calculators', PhosphorIconsRegular.calculator, PhosphorIconsFill.calculator, 'Calculators'),
-    NavItemData('Saved', PhosphorIconsRegular.bookmarkSimple, PhosphorIconsFill.bookmarkSimple, 'Saved'),
-    NavItemData('Settings', PhosphorIconsRegular.gearSix, PhosphorIconsFill.gearSix, 'Settings'),
+    NavItemData(
+        'Home', PhosphorIconsRegular.house, PhosphorIconsFill.house, 'Home'),
+    NavItemData('Calculators', PhosphorIconsRegular.calculator,
+        PhosphorIconsFill.calculator, 'Calculators'),
+    NavItemData('Saved', PhosphorIconsRegular.bookmarkSimple,
+        PhosphorIconsFill.bookmarkSimple, 'Saved'),
+    NavItemData('Settings', PhosphorIconsRegular.gearSix,
+        PhosphorIconsFill.gearSix, 'Settings'),
   ];
 
   Widget buildDock({
@@ -59,7 +63,8 @@ void main() {
   }
 
   group('Finwise Adaptive Dock Tests', () {
-    testWidgets('Renders all 4 destinations with readable labels and icons', (tester) async {
+    testWidgets('Renders all 4 destinations with readable labels and icons',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -85,7 +90,8 @@ void main() {
       expect(find.byIcon(PhosphorIconsRegular.gearSix), findsOneWidget);
     });
 
-    testWidgets('Tapping destinations triggers onChanged with haptic feedback', (tester) async {
+    testWidgets('Tapping destinations triggers onChanged with haptic feedback',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -121,7 +127,8 @@ void main() {
       expect(find.byIcon(PhosphorIconsFill.gearSix), findsOneWidget);
     });
 
-    testWidgets('Zero overflow on narrow device (320px) with 1.3x font scale', (tester) async {
+    testWidgets('Zero overflow on narrow device (320px) with 1.3x font scale',
+        (tester) async {
       // Smallest Android screen width with accessibility font scaling
       await tester.binding.setSurfaceSize(const Size(320, 568));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -159,7 +166,9 @@ void main() {
       expect(find.text('Home'), findsNothing);
     });
 
-    testWidgets('Adapts to Dark Mode and all 6 accent palettes without neon clashing', (tester) async {
+    testWidgets(
+        'Adapts to Dark Mode and all 6 accent palettes without neon clashing',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -179,7 +188,8 @@ void main() {
       }
     });
 
-    testWidgets('Dynamic bottom nav clearance provides sufficient inset buffer', (tester) async {
+    testWidgets('Dynamic bottom nav clearance provides sufficient inset buffer',
+        (tester) async {
       final context = tester.element(find.byType(Container).first);
 
       // Gesture navigation inset (bottom = 24)
@@ -191,7 +201,9 @@ void main() {
       expect(AppSpacing.navDockHeight, 54.0);
     });
 
-    testWidgets('Home page categories layout maintains full visibility and no orphan gap', (tester) async {
+    testWidgets(
+        'Home page categories layout maintains full visibility and no orphan gap',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -226,7 +238,8 @@ void main() {
 
       // Scroll to bottom and ensure last popular item is fully visible
       final scrollable = find.byType(Scrollable).first;
-      await tester.scrollUntilVisible(find.text('CAGR'), 300, scrollable: scrollable);
+      await tester.scrollUntilVisible(find.text('CAGR'), 300,
+          scrollable: scrollable);
       await tester.pumpAndSettle();
       expect(find.text('CAGR'), findsOneWidget);
     });

@@ -265,5 +265,47 @@ void main() {
           tester.widgetList<IconBadge>(find.byType(IconBadge));
       expect(updatedIconBadges.first.color, pinkPrimary);
     });
+
+    testWidgets(
+        'Interest payment picker switches from On Maturity to Monthly and updates output',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final compoundDef = calcById('compound')!;
+
+      await tester.pumpWidget(
+        createTestApp(
+          prefs: prefs,
+          repo: repo,
+          home: CalculatorScreen(def: compoundDef),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially On Maturity is selected and Compounding field is visible
+      expect(find.text('Interest payment'), findsWidgets);
+      expect(find.text('On Maturity'), findsWidgets);
+      expect(find.text('Compounding'), findsOneWidget);
+
+      // Tap on Interest payment to open pickOne modal sheet
+      await tester.tap(find.text('On Maturity').first);
+      await tester.pumpAndSettle();
+
+      // Modal bottom sheet appears with choices
+      expect(find.widgetWithText(ListTile, 'Monthly'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'Quarterly'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'Yearly'), findsOneWidget);
+
+      // Select 'Monthly' from bottom sheet
+      await tester.tap(find.widgetWithText(ListTile, 'Monthly'));
+      await tester.pumpAndSettle();
+
+      // Now 'Monthly' is displayed, Compounding field is cleanly hidden, and results show Total payout received
+      expect(find.text('Monthly'), findsWidgets);
+      expect(find.text('Compounding'), findsNothing);
+      expect(find.text('TOTAL PAYOUT RECEIVED'), findsOneWidget);
+      expect(find.text('Monthly interest payout'), findsOneWidget);
+    });
   });
 }

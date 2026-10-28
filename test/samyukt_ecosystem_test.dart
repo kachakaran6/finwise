@@ -84,7 +84,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Samyukt Ecosystem Registry Parsing & Filtering Tests', () {
-    test('Strict filtering: only includes production, published, coming_soon from apps[]', () {
+    test(
+        'Strict filtering: only includes production, published, coming_soon from apps[]',
+        () {
       final apps = SamyuktRegistryService.parseRegistryJson(_mockValidRegistry);
 
       // Total apps: 6, but only Vault X (production), Trust Tracker (PUBLISHED -> published), and Upcoming App (coming_soon) should be included.
@@ -116,8 +118,11 @@ void main() {
     });
 
     test('Handles malformed and unexpected JSON gracefully', () {
-      expect(() => SamyuktRegistryService.parseRegistryJson('not a json'), throwsA(isA<FormatException>()));
-      expect(() => SamyuktRegistryService.parseRegistryJson('{"no_apps": true}'), throwsA(isA<FormatException>()));
+      expect(() => SamyuktRegistryService.parseRegistryJson('not a json'),
+          throwsA(isA<FormatException>()));
+      expect(
+          () => SamyuktRegistryService.parseRegistryJson('{"no_apps": true}'),
+          throwsA(isA<FormatException>()));
 
       // Empty apps array returns empty list safely
       final empty = SamyuktRegistryService.parseRegistryJson('{"apps": []}');
@@ -133,7 +138,8 @@ void main() {
       prefs = await SharedPreferences.getInstance();
     });
 
-    test('Falls back to cached registry data when remote fetch fails', () async {
+    test('Falls back to cached registry data when remote fetch fails',
+        () async {
       // Mock network failure
       final mockClient = MockClient((request) async {
         return http.Response('Server error', 500);
@@ -155,7 +161,10 @@ void main() {
       final message = AppInfoService.generateShareMessage();
 
       expect(message, contains('Discover Finwise'));
-      expect(message, contains('https://play.google.com/store/apps/details?id=com.finwise.appilcation'));
+      expect(
+          message,
+          contains(
+              'https://play.google.com/store/apps/details?id=com.finwise.appilcation'));
       expect(message, contains('Made with care by Samyukt.'));
     });
 
@@ -193,11 +202,14 @@ void main() {
       );
     }
 
-    testWidgets('SettingsPage renders Our Apps, dynamic version, and Samyukt attribution', (tester) async {
+    testWidgets(
+        'SettingsPage renders Our Apps, dynamic version, and Samyukt attribution',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1600));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(createTestApp(const Scaffold(body: SettingsPage())));
+      await tester
+          .pumpWidget(createTestApp(const Scaffold(body: SettingsPage())));
       await tester.pumpAndSettle();
 
       // Check Ecosystem group
@@ -216,7 +228,8 @@ void main() {
       expect(find.textContaining('Version'), findsOneWidget);
     });
 
-    testWidgets('OurAppsPage renders application cards from registry', (tester) async {
+    testWidgets('OurAppsPage renders application cards from registry',
+        (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1600));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 

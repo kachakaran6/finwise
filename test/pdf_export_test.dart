@@ -14,7 +14,9 @@ void main() {
   final fmt = Fmt(currencyByCode('INR'), 'en_IN');
 
   group('PdfExportService Tests', () {
-    test('Generates valid, non-empty PDF for Compound Interest with Schedule & Formula', () async {
+    test(
+        'Generates valid, non-empty PDF for Compound Interest with Schedule & Formula',
+        () async {
       final def = calcById('compound')!;
       final rawInputs = {
         'principal': '10000',
@@ -44,7 +46,8 @@ void main() {
 
       // Check that PDF contains text elements for branding, formula, and disclaimer
       final pdfString = String.fromCharCodes(pdfBytes);
-      expect(pdfString.contains('FINWISE') || pdfString.contains('Finwise'), isTrue);
+      expect(pdfString.contains('FINWISE') || pdfString.contains('Finwise'),
+          isTrue);
       expect(pdfString.contains('Samyukt'), isFalse);
     });
 
@@ -80,7 +83,9 @@ void main() {
       expect(emojiRegex.hasMatch(pdfString), isFalse);
     });
 
-    test('Generates PDF for calculators without schedule (e.g. Simple Interest)', () async {
+    test(
+        'Generates PDF for calculators without schedule (e.g. Simple Interest)',
+        () async {
       final def = calcById('simple')!;
       final rawInputs = {
         'principal': '25000',

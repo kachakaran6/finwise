@@ -334,6 +334,93 @@ void main() {
     });
   });
 
+  group('Interest Payment Frequency Validation Suite', () {
+    final comp = calcById('compound')!;
+
+    test('Monthly interest payout calculates exact periodic amount and total',
+        () {
+      final res = comp.compute(CalcInputs({
+        'principal': 100000.0,
+        'rate': 7.5,
+        'years': 5.0,
+        'unit': 'years',
+        'payout': 'monthly',
+      }));
+      // Monthly payout = 100,000 * 0.075 / 12 = 625.0
+      expect(res.rows[2].label, 'Monthly interest payout');
+      expect(res.rows[2].value, closeTo(625.0, 1e-4));
+      // Total interest = 100,000 * 0.075 * 5 = 37,500.0
+      expect(res.rows[1].label, 'Total interest payout');
+      expect(res.rows[1].value, closeTo(37500.0, 1e-4));
+      // Total payout received = Principal + Total Interest = 137,500.0
+      expect(res.primary.label, 'Total payout received');
+      expect(res.primary.value, closeTo(137500.0, 1e-4));
+      expect(res.schedule!.columns,
+          ['Year', 'Principal', 'Interest Payout', 'Total Received']);
+      expect(res.schedule!.rows.last[3], closeTo(137500.0, 1e-4));
+    });
+
+    test('Quarterly interest payout calculates exact quarterly amount', () {
+      final res = comp.compute(CalcInputs({
+        'principal': 100000.0,
+        'rate': 8.0,
+        'years': 3.0,
+        'unit': 'years',
+        'payout': 'quarterly',
+      }));
+      // Quarterly payout = 100,000 * 0.08 / 4 = 2,000.0
+      expect(res.rows[2].label, 'Quarterly interest payout');
+      expect(res.rows[2].value, closeTo(2000.0, 1e-4));
+      // Total interest = 100,000 * 0.08 * 3 = 24,000.0
+      expect(res.rows[1].label, 'Total interest payout');
+      expect(res.rows[1].value, closeTo(24000.0, 1e-4));
+      expect(res.primary.value, closeTo(124000.0, 1e-4));
+    });
+
+    test('Yearly interest payout calculates exact annual amount', () {
+      final res = comp.compute(CalcInputs({
+        'principal': 50000.0,
+        'rate': 9.0,
+        'years': 4.0,
+        'unit': 'years',
+        'payout': 'yearly',
+      }));
+      // Annual payout = 50,000 * 0.09 = 4,500.0
+      expect(res.rows[2].label, 'Annual interest payout');
+      expect(res.rows[2].value, closeTo(4500.0, 1e-4));
+      // Total interest = 50,000 * 0.09 * 4 = 18,000.0
+      expect(res.rows[1].label, 'Total interest payout');
+      expect(res.rows[1].value, closeTo(18000.0, 1e-4));
+      expect(res.primary.value, closeTo(68000.0, 1e-4));
+    });
+
+    test('On Maturity keeps full compounding at chosen frequency', () {
+      final res = comp.compute(CalcInputs({
+        'principal': 100000.0,
+        'rate': 8.0,
+        'years': 2.0,
+        'unit': 'years',
+        'payout': 'maturity',
+        'm': '4', // Quarterly compounding
+      }));
+      // A = 100000 * (1 + 0.08/4)^(4*2) = 100000 * 1.02^8 = 117,165.94
+      expect(res.primary.label, 'Estimated final value');
+      expect(res.primary.value, closeTo(117165.94, 0.01));
+      expect(res.rows[3].label, 'Interest payment');
+      expect(res.rows[3].text, 'On Maturity');
+    });
+
+    test(
+        'Dynamic field visibility: Compounding is only visible when payout is maturity',
+        () {
+      final mField = comp.fields.firstWhere((f) => f.id == 'm');
+      expect(mField.visible({'payout': 'maturity'}), isTrue);
+      expect(mField.visible({'payout': 'monthly'}), isFalse);
+      expect(mField.visible({'payout': 'quarterly'}), isFalse);
+      expect(mField.visible({'payout': 'yearly'}), isFalse);
+    });
+  });
+
   group('comprehensive financial formula audit (C02 - C14)', () {
     test('C02 Simple Interest: zero rate, zero time, boundary accuracy', () {
       final calc = calcById('simple')!;
