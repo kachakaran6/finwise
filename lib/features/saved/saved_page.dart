@@ -132,7 +132,7 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                 controller: scrollController,
                 padding: EdgeInsets.fromLTRB(
                   AppSpacing.screen,
-                  AppSpacing.sm,
+                  AppSpacing.md,
                   AppSpacing.screen,
                   AppSpacing.bottomNavClearance(context),
                 ),

@@ -76,7 +76,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
             controller: scrollController,
             padding: EdgeInsets.fromLTRB(
               AppSpacing.screen,
-              AppSpacing.sm,
+              AppSpacing.md,
               AppSpacing.screen,
               AppSpacing.bottomNavClearance(context),
             ),

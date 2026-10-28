@@ -242,9 +242,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   List<num>? _getPresets(FieldDef f) {
-    if (f.id == 'p' && f.money) return const [5000, 10000, 25000, 50000, 100000];
-    if (f.id == 'r') return const [6, 8, 10, 12, 15];
-    if (f.id == 't') return const [3, 5, 10, 15, 20];
+    if (f.money) return const [5000, 10000, 25000, 50000, 100000];
+    if (f.id == 'rate' || f.id == 'aRate' || f.id == 'bRate') return const [6, 8, 10, 12, 15];
+    if (f.id == 'years') {
+      final unit = _choices['unit'];
+      if (unit == 'days') return const [30, 90, 180, 365, 730];
+      if (unit == 'months') return const [6, 12, 24, 36, 60];
+      return const [3, 5, 10, 15, 20];
+    }
+    if (f.id == 'tenure') {
+      final unit = _choices['unit'];
+      if (unit == 'months') return const [12, 24, 36, 60, 120];
+      return const [5, 10, 15, 20, 25];
+    }
     return null;
   }
 
@@ -254,6 +264,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final cur = ref.read(fmtProvider).currency.symbol.trim();
     final allowNeg = (f.min ?? 0) < 0;
     final presets = _getPresets(f);
+    final effectiveSuffix = (f.id == 'years' && _choices.containsKey('unit'))
+        ? _choices['unit']
+        : f.suffix;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +284,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             errorText: err,
             prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
             prefixStyle: TextStyle(fontFamily: AppType.mono, fontSize: 16, color: p.inkMuted, fontWeight: FontWeight.w600),
-            suffixText: f.suffix,
+            suffixText: effectiveSuffix,
             suffixStyle: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -289,8 +302,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 String label = v.toString();
                 if (f.money) {
                   label = cur.isNotEmpty ? '$cur$v' : '$v';
-                } else if (f.suffix != null) {
-                  label = '$v${f.suffix}';
+                } else if (effectiveSuffix != null) {
+                  label = '$v $effectiveSuffix';
                 }
                 return InkWell(
                   borderRadius: BorderRadius.circular(15),

@@ -25,7 +25,27 @@ int periodsFor(double years, int perYear, {int max = 12000}) {
 double compoundValue(double principal, double annualPct, double years, int m) {
   final r = annualPct / 100;
   if (r == 0) return principal;
+  if (years == 0) return principal;
   return principal * pw(1 + r / m, m * years);
+}
+
+/// Computes compound interest with explicit duration units ('years', 'months', 'days')
+/// under the documented standard 365-day annual time convention (t = days ÷ 365.0).
+double compoundValueWithUnit(double principal, double annualPct, double duration, String unit, int m) {
+  final double t;
+  switch (unit) {
+    case 'days':
+      t = duration / 365.0;
+      break;
+    case 'months':
+      t = duration / 12.0;
+      break;
+    case 'years':
+    default:
+      t = duration;
+      break;
+  }
+  return compoundValue(principal, annualPct, t, m);
 }
 
 // C02

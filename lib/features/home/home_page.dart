@@ -59,7 +59,7 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
             controller: scrollController,
             padding: EdgeInsets.fromLTRB(
               AppSpacing.screen,
-              AppSpacing.xs,
+              AppSpacing.md,
               AppSpacing.screen,
               AppSpacing.bottomNavClearance(context),
             ),

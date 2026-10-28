@@ -26,6 +26,28 @@ const _convention = [
   ChoiceOption('nominal', 'Nominal (annual rate ÷ periods)'),
   ChoiceOption('effective', 'Effective annual rate'),
 ];
+const _durationUnits = [
+  ChoiceOption('years', 'Years'),
+  ChoiceOption('months', 'Months'),
+  ChoiceOption('days', 'Days'),
+];
+
+String _compoundingName(int m) {
+  switch (m) {
+    case 1:
+      return 'Annually (1 period/yr)';
+    case 2:
+      return 'Semi-annually (2 periods/yr)';
+    case 4:
+      return 'Quarterly (4 periods/yr)';
+    case 12:
+      return 'Monthly (12 periods/yr)';
+    case 365:
+      return 'Daily (365 periods/yr)';
+    default:
+      return '$m periods/yr';
+  }
+}
 
 FieldDef _money(String id, String label, double def, {String? hint, String? help, bool req = true, double min = 0, String? showField, String? showValue}) =>
     FieldDef(id: id, label: label, money: true, defaultValue: def, hint: hint, help: help, required: req, min: min, max: 1e12, showWhenField: showField, showWhenValue: showValue);
@@ -54,27 +76,117 @@ String _convText(bool eff, int k) => eff
 
 // ───────────────────────── C01 ─────────────────────────
 CalcResult _compound(CalcInputs x) {
-  final p = x.n('principal'), r = x.n('rate'), t = x.n('years');
+  final p = x.n('principal');
+  final r = x.n('rate');
+  final durationVal = x.n('years');
+  final unit = x.values.containsKey('unit') ? x.s('unit') : 'years';
   final m = int.parse(x.s('m'));
-  final a = compoundValue(p, r, t, m);
-  final pts = _yearPoints(t);
-  final ys = pts.map((y) => compoundValue(p, r, y, m)).toList();
+
+  late final double tInYears;
+  late final String durationLabel;
+  late final String conventionNote;
+  late final String xLabel;
+  late final String col0Name;
+  late final List<double> pts;
+  late final double Function(double pt) toYears;
+
+  switch (unit) {
+    case 'days':
+      tInYears = durationVal / 365.0;
+      final dStr = durationVal == durationVal.roundToDouble()
+          ? durationVal.toInt().toString()
+          : durationVal.toStringAsFixed(1);
+      durationLabel = '$dStr days (${(durationVal / 365.0).toStringAsFixed(2)} yrs)';
+      conventionNote = 'Elapsed time is $dStr days, evaluated under the 365-day convention (t = d ÷ 365).';
+      xLabel = 'Days';
+      col0Name = 'Day';
+
+      final step = durationVal <= 15
+          ? 1.0
+          : (durationVal <= 45
+              ? 5.0
+              : (durationVal <= 120
+                  ? 15.0
+                  : (durationVal <= 365 ? 30.0 : 365.0)));
+      pts = <double>[0];
+      for (var s = step; s < durationVal; s += step) {
+        pts.add(s);
+      }
+      if (pts.last != durationVal) pts.add(durationVal);
+      toYears = (d) => d / 365.0;
+      break;
+
+    case 'months':
+      tInYears = durationVal / 12.0;
+      final mStr = durationVal == durationVal.roundToDouble()
+          ? durationVal.toInt().toString()
+          : durationVal.toStringAsFixed(1);
+      durationLabel = '$mStr months (${(durationVal / 12.0).toStringAsFixed(2)} yrs)';
+      conventionNote = 'Elapsed time is $mStr months, evaluated as t = months ÷ 12 years.';
+      xLabel = 'Months';
+      col0Name = 'Month';
+
+      final step = durationVal <= 12
+          ? 1.0
+          : (durationVal <= 36
+              ? 3.0
+              : (durationVal <= 60 ? 6.0 : 12.0));
+      pts = <double>[0];
+      for (var s = step; s < durationVal; s += step) {
+        pts.add(s);
+      }
+      if (pts.last != durationVal) pts.add(durationVal);
+      toYears = (mo) => mo / 12.0;
+      break;
+
+    case 'years':
+    default:
+      tInYears = durationVal;
+      final yStr = durationVal == durationVal.roundToDouble()
+          ? durationVal.toInt().toString()
+          : durationVal.toStringAsFixed(2);
+      durationLabel = '$yStr yrs';
+      conventionNote = 'Elapsed time is $yStr years.';
+      xLabel = 'Years';
+      col0Name = 'Year';
+      pts = _yearPoints(tInYears);
+      toYears = (y) => y;
+      break;
+  }
+
+  final a = compoundValue(p, r, tInYears, m);
+  final ys = pts.map((pt) => compoundValue(p, r, toYears(pt), m)).toList();
   final rows = <List<double>>[];
   for (var i = 1; i < pts.length; i++) {
     rows.add([pts[i], ys[i - 1], ys[i] - ys[i - 1], ys[i]]);
   }
-  final ear = (pw(1 + r / 100 / m, m.toDouble()) - 1) * 100;
+  final ear = r == 0 ? 0.0 : (pw(1 + (r / 100) / m, m.toDouble()) - 1) * 100;
+
   return CalcResult(
     primary: ResultRow('Estimated final value', a),
     rows: [
       ResultRow('Principal', p),
       ResultRow('Estimated interest', a - p),
       ResultRow('Effective annual rate', ear, kind: ValueKind.percent),
-      ResultRow('Duration', t, kind: ValueKind.years),
+      if (unit == 'years')
+        ResultRow('Duration', durationVal, kind: ValueKind.years)
+      else
+        ResultRow.text('Duration', durationLabel),
     ],
-    assumptions: ['Interest is added to the balance $m time(s) per year.', 'No deposits, withdrawals, fees or taxes are modelled.'],
-    chart: ChartSpec('Years', [Series('Principal', pts, pts.map((_) => p).toList(), emphasis: false), Series('Estimated value', pts, ys)]),
-    schedule: Schedule(['Year', 'Opening', 'Interest', 'Closing'], rows),
+    assumptions: [
+      'Compounding frequency: ${_compoundingName(m)} ($m period(s) per year).',
+      conventionNote,
+      if (m == 365 && unit == 'days')
+        'Under daily compounding and 365-day convention: A = P × (1 + r/365)^d.'
+      else
+        'Conventional nominal-rate model: A = P × (1 + r/m)^(m×t).',
+      'No deposits, withdrawals, fees or taxes are modelled.',
+    ],
+    chart: ChartSpec(xLabel, [
+      Series('Principal', pts, pts.map((_) => p).toList(), emphasis: false),
+      Series('Estimated value', pts, ys),
+    ]),
+    schedule: Schedule([col0Name, 'Opening', 'Interest', 'Closing'], rows),
   );
 }
 
@@ -434,10 +546,22 @@ FieldDef _num(String id, String label, double def, String mode, {String? suffix}
 final List<CalculatorDef> catalog = [
   CalculatorDef(
     id: 'compound', code: 'C01', name: 'Compound Interest', category: CalcCategory.growth,
-    summary: 'Growth of a lump sum with compounding.', explains: 'Shows how a single deposit grows when interest is added to the balance at a chosen frequency.',
-    aliases: ['lump sum', 'lumpsum', 'future value', 'interest on interest'],
-    formula: ['A = P × (1 + r/m)^(m×t)', 'Interest = A − P', 'If r = 0, A = P'],
-    fields: [_money('principal', 'Principal', 10000), _rate('rate', 'Annual interest rate', 8, min: 0), _years('years', 'Time period', 10), _choice('m', 'Compounding', _compounding, '12')],
+    summary: 'Growth of a lump sum with compounding.', explains: 'Shows how a single deposit grows when interest is added to the balance at a chosen frequency over days, months, or years.',
+    aliases: ['lump sum', 'lumpsum', 'future value', 'interest on interest', 'daily compound'],
+    formula: [
+      'A = P × (1 + r/m)^(m×t)',
+      't = years, or months ÷ 12, or days ÷ 365',
+      'Daily compounding: A = P × (1 + r/365)^d',
+      'Interest = A − P',
+      'If r = 0, A = P',
+    ],
+    fields: [
+      _money('principal', 'Principal', 10000),
+      _rate('rate', 'Annual interest rate', 8, min: 0),
+      const FieldDef(id: 'years', label: 'Time period', defaultValue: 10, min: 0.01, max: 36500, suffix: 'years'),
+      _choice('unit', 'Duration unit', _durationUnits, 'years'),
+      _choice('m', 'Compounding', _compounding, '12'),
+    ],
     compute: _compound,
   ),
   CalculatorDef(
