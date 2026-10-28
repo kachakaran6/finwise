@@ -34,6 +34,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final Map<String, String> _choices = {};
   bool _showAll = false;
   Scenario? _saved;
+
   /// Whether inputs have changed since last save / initial load.
   bool _dirty = false;
 
@@ -42,12 +43,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     super.initState();
     _saved = widget.existing;
     _load(widget.existing?.inputs);
-    WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(settingsProvider.notifier).pushRecent(widget.def.id));
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => ref.read(settingsProvider.notifier).pushRecent(widget.def.id));
   }
 
   void _load(Map<String, dynamic>? src) {
     for (final f in widget.def.fields) {
-      final v = src != null && src.containsKey(f.id) ? src[f.id] : f.defaultValue;
+      final v =
+          src != null && src.containsKey(f.id) ? src[f.id] : f.defaultValue;
       if (f.kind == FieldKind.choice) {
         _choices[f.id] = v is String ? v : f.defaultValue as String;
       } else {
@@ -64,7 +67,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     super.dispose();
   }
 
-  InputState get _state => validateInputs(widget.def, {for (final e in _ctrl.entries) e.key: e.value.text}, _choices);
+  InputState get _state => validateInputs(widget.def,
+      {for (final e in _ctrl.entries) e.key: e.value.text}, _choices);
 
   void _reset() => setState(() {
         _dirty = false;
@@ -78,12 +82,26 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       toast(context, 'Fix the highlighted fields before saving.');
       return;
     }
-    final title = await askText(context, title: _saved == null ? 'Save scenario' : 'Update scenario', initial: _saved?.title ?? widget.def.name, hint: 'Scenario name');
+    final title = await askText(context,
+        title: _saved == null ? 'Save scenario' : 'Update scenario',
+        initial: _saved?.title ?? widget.def.name,
+        hint: 'Scenario name');
     if (title == null || !mounted) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final s = _saved == null
-        ? Scenario(id: newId(), title: title, calcId: widget.def.id, inputs: Map<String, dynamic>.from(st.values), snapshot: res.toSnapshot(), createdAt: now, updatedAt: now)
-        : _saved!.copyWith(title: title, inputs: Map<String, dynamic>.from(st.values), snapshot: res.toSnapshot(), updatedAt: now);
+        ? Scenario(
+            id: newId(),
+            title: title,
+            calcId: widget.def.id,
+            inputs: Map<String, dynamic>.from(st.values),
+            snapshot: res.toSnapshot(),
+            createdAt: now,
+            updatedAt: now)
+        : _saved!.copyWith(
+            title: title,
+            inputs: Map<String, dynamic>.from(st.values),
+            snapshot: res.toSnapshot(),
+            updatedAt: now);
     await ref.read(scenariosProvider.notifier).save(s);
     PlayService.onScenarioSaved().ignore();
     if (!mounted) return;
@@ -129,7 +147,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final p = context.pal;
     final t = Theme.of(context).textTheme;
     final fmt = ref.watch(fmtProvider);
-    final fav = ref.watch(settingsProvider.select((s) => s.favorites.contains(def.id)));
+    final fav =
+        ref.watch(settingsProvider.select((s) => s.favorites.contains(def.id)));
     final st = _state;
 
     CalcResult? result;
@@ -160,9 +179,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               title: def.name,
               actions: [
                 AppHeaderAction(
-                  icon: fav ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                  icon:
+                      fav ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
                   tooltip: fav ? 'Remove from favourites' : 'Add to favourites',
-                  onPressed: () => ref.read(settingsProvider.notifier).toggleFavorite(def.id),
+                  onPressed: () => ref
+                      .read(settingsProvider.notifier)
+                      .toggleFavorite(def.id),
                 ),
                 AppHeaderAction(
                   icon: PhosphorIconsRegular.filePdf,
@@ -180,7 +202,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               child: SafeArea(
                 top: false,
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(Sp.page, Sp.sm, Sp.page, Sp.xxxl),
+                  padding: const EdgeInsets.fromLTRB(
+                      Sp.page, Sp.sm, Sp.page, Sp.xxxl),
                   children: [
                     AppCard(
                       child: Column(
@@ -192,43 +215,65 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                                 padding: EdgeInsets.only(
                                   bottom: f == def.fields.last ? 0 : Sp.lg,
                                 ),
-                                child: f.kind == FieldKind.choice ? _choiceField(f) : _numberField(f, st),
+                                child: f.kind == FieldKind.choice
+                                    ? _choiceField(f)
+                                    : _numberField(f, st),
                               ),
                         ],
                       ),
                     ),
                     const SizedBox(height: Sp.xl),
                     if (result != null) ...[
-                      ResultView(key: ValueKey(def.id), def: def, result: result, fmt: fmt),
+                      ResultView(
+                          key: ValueKey(def.id),
+                          def: def,
+                          result: result,
+                          fmt: fmt),
                       const SizedBox(height: Sp.xl),
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md)),
                         ),
                         onPressed: () => _save(st, result!),
-                        icon: Icon(_saved == null ? PhosphorIconsRegular.bookmarkSimple : PhosphorIconsRegular.check, size: 20),
-                        label: Text(_saved == null ? 'Save scenario' : 'Update saved scenario'),
+                        icon: Icon(
+                            _saved == null
+                                ? PhosphorIconsRegular.bookmarkSimple
+                                : PhosphorIconsRegular.check,
+                            size: 20),
+                        label: Text(_saved == null
+                            ? 'Save scenario'
+                            : 'Update saved scenario'),
                       ),
                       const SizedBox(height: Sp.sm),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.md)),
                           side: BorderSide(color: p.outline),
                           foregroundColor: p.ink,
                         ),
                         onPressed: () => _exportPdf(st, result, fmt),
-                        icon: const Icon(PhosphorIconsRegular.filePdf, size: 20),
+                        icon:
+                            const Icon(PhosphorIconsRegular.filePdf, size: 20),
                         label: const Text('Export PDF Report'),
                       ),
                     ] else
                       AppCard(
                         color: p.surfaceAlt,
                         child: Row(children: [
-                          Icon(PhosphorIconsRegular.warningCircle, color: error != null ? p.loss : p.inkMuted),
+                          Icon(PhosphorIconsRegular.warningCircle,
+                              color: error != null ? p.loss : p.inkMuted),
                           const SizedBox(width: Sp.md),
-                          Expanded(child: Text(error ?? 'Complete the highlighted fields to see the result.', style: t.bodyMedium)),
+                          Expanded(
+                              child: Text(
+                                  error ??
+                                      'Complete the highlighted fields to see the result.',
+                                  style: t.bodyMedium)),
                         ]),
                       ),
                   ],
@@ -243,7 +288,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   List<num>? _getPresets(FieldDef f) {
     if (f.money) return const [5000, 10000, 25000, 50000, 100000];
-    if (f.id == 'rate' || f.id == 'aRate' || f.id == 'bRate') return const [6, 8, 10, 12, 15];
+    if (f.id == 'rate' || f.id == 'aRate' || f.id == 'bRate')
+      return const [6, 8, 10, 12, 15];
     if (f.id == 'years') {
       final unit = _choices['unit'];
       if (unit == 'days') return const [30, 90, 180, 365, 730];
@@ -259,7 +305,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   Widget _numberField(FieldDef f, InputState st) {
-    final err = (_dirty || _showAll || (_ctrl[f.id]?.text.isNotEmpty ?? false)) ? st.errors[f.id] : null;
+    final err = (_dirty || _showAll || (_ctrl[f.id]?.text.isNotEmpty ?? false))
+        ? st.errors[f.id]
+        : null;
     final p = context.pal;
     final cur = ref.read(fmtProvider).currency.symbol.trim();
     final allowNeg = (f.min ?? 0) < 0;
@@ -273,8 +321,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       children: [
         TextField(
           controller: _ctrl[f.id],
-          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))],
+          keyboardType:
+              TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(
+                RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))
+          ],
           onChanged: (_) => setState(() => _dirty = true),
           style: AppType.figure(p.ink, size: 16),
           decoration: InputDecoration(
@@ -283,7 +335,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             helperMaxLines: 3,
             errorText: err,
             prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
-            prefixStyle: TextStyle(fontFamily: AppType.mono, fontSize: 16, color: p.inkMuted, fontWeight: FontWeight.w600),
+            prefixStyle: TextStyle(
+                fontFamily: AppType.mono,
+                fontSize: 16,
+                color: p.inkMuted,
+                fontWeight: FontWeight.w600),
             suffixText: effectiveSuffix,
             suffixStyle: Theme.of(context).textTheme.bodySmall,
           ),
@@ -314,12 +370,17 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isCurrent ? p.primary.withValues(alpha: 0.15) : p.surfaceAlt,
+                      color: isCurrent
+                          ? p.primary.withValues(alpha: 0.15)
+                          : p.surfaceAlt,
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
-                        color: isCurrent ? p.primary : p.outline.withValues(alpha: 0.7),
+                        color: isCurrent
+                            ? p.primary
+                            : p.outline.withValues(alpha: 0.7),
                         width: 1,
                       ),
                     ),
@@ -329,7 +390,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       style: TextStyle(
                         fontFamily: AppType.mono,
                         fontSize: 11.5,
-                        fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isCurrent ? FontWeight.w700 : FontWeight.w500,
                         color: isCurrent ? p.primary : p.inkMuted,
                       ),
                     ),
@@ -349,7 +411,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return InkWell(
       borderRadius: Rd.r(Rd.md),
       onTap: () async {
-        final v = await pickOne(context, title: f.label, options: f.options, selected: value);
+        final v = await pickOne(context,
+            title: f.label, options: f.options, selected: value);
         if (v != null) {
           setState(() {
             _choices[f.id] = v;
@@ -362,9 +425,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           labelText: f.label,
           helperText: f.help,
           helperMaxLines: 3,
-          suffixIcon: Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted),
+          suffixIcon:
+              Icon(PhosphorIconsRegular.caretDown, size: 18, color: p.inkMuted),
         ),
-        child: Text(f.optionLabel(value), style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
+        child: Text(f.optionLabel(value),
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(fontWeight: FontWeight.w500)),
       ),
     );
   }

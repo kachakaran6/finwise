@@ -46,7 +46,8 @@ class FinwiseNavBar extends StatelessWidget {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 10;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final duration = reduceMotion ? Duration.zero : const Duration(milliseconds: 200);
+    final duration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 200);
 
     if (keyboardVisible) return const SizedBox.shrink();
 
@@ -70,7 +71,8 @@ class FinwiseNavBar extends StatelessWidget {
               ? FinwiseElevation.navShadowDark
               : FinwiseElevation.navShadowLight,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: FinwiseSpacing.sm, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: FinwiseSpacing.sm, vertical: 6),
         child: Row(
           children: [
             for (int i = 0; i < items.length; i++)
@@ -131,7 +133,8 @@ class _NavBarTab extends StatelessWidget {
             duration: duration,
             curve: Curves.easeOutCubic,
             padding: EdgeInsets.symmetric(
-              horizontal: isSelected ? FinwiseSpacing.sm + 2 : FinwiseSpacing.xs,
+              horizontal:
+                  isSelected ? FinwiseSpacing.sm + 2 : FinwiseSpacing.xs,
               vertical: 8,
             ),
             decoration: BoxDecoration(

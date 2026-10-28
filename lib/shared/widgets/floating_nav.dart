@@ -44,12 +44,14 @@ class FloatingNavBar extends StatelessWidget {
     final bottomInset = mediaQuery.padding.bottom;
     final keyboardVisible = mediaQuery.viewInsets.bottom > 10;
     final reduceMotion = mediaQuery.disableAnimations;
-    final duration = reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
+    final duration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
 
     if (keyboardVisible) return const SizedBox.shrink();
 
     // Floating margin above system navigation
-    final bottomMargin = bottomInset > 0 ? bottomInset + AppSpacing.navDockMargin : 14.0;
+    final bottomMargin =
+        bottomInset > 0 ? bottomInset + AppSpacing.navDockMargin : 14.0;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, bottomMargin),
@@ -101,10 +103,13 @@ class FloatingNavBar extends StatelessWidget {
                           curve: Curves.easeOutCubic,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: tokens.primary.withValues(alpha: isDark ? 0.20 : 0.12),
-                              borderRadius: BorderRadius.circular((dockHeight - 8) / 2),
+                              color: tokens.primary
+                                  .withValues(alpha: isDark ? 0.20 : 0.12),
+                              borderRadius:
+                                  BorderRadius.circular((dockHeight - 8) / 2),
                               border: Border.all(
-                                color: tokens.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+                                color: tokens.primary
+                                    .withValues(alpha: isDark ? 0.35 : 0.25),
                                 width: 1.0,
                               ),
                             ),
@@ -183,7 +188,8 @@ class _NavItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular((FloatingNavBar.dockHeight - 8) / 2),
+        borderRadius:
+            BorderRadius.circular((FloatingNavBar.dockHeight - 8) / 2),
         onTap: onTap,
         splashColor: tokens.primary.withValues(alpha: 0.12),
         highlightColor: Colors.transparent,

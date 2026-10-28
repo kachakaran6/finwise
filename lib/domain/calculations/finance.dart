@@ -31,7 +31,8 @@ double compoundValue(double principal, double annualPct, double years, int m) {
 
 /// Computes compound interest with explicit duration units ('years', 'months', 'days')
 /// under the documented standard 365-day annual time convention (t = days ÷ 365.0).
-double compoundValueWithUnit(double principal, double annualPct, double duration, String unit, int m) {
+double compoundValueWithUnit(
+    double principal, double annualPct, double duration, String unit, int m) {
   final double t;
   switch (unit) {
     case 'days':
@@ -49,22 +50,26 @@ double compoundValueWithUnit(double principal, double annualPct, double duration
 }
 
 // C02
-double simpleInterest(double p, double annualPct, double years) => p * (annualPct / 100) * years;
+double simpleInterest(double p, double annualPct, double years) =>
+    p * (annualPct / 100) * years;
 
 // C03
 double annuityFv(double c, double i, int n, {bool begin = false}) {
-  final base = i.abs() < kZeroTol ? c * n : c * (pw(1 + i, n.toDouble()) - 1) / i;
+  final base =
+      i.abs() < kZeroTol ? c * n : c * (pw(1 + i, n.toDouble()) - 1) / i;
   return begin ? base * (1 + i) : base;
 }
 
 // C05
 double goalContribution(double fv, double i, int n, {bool begin = false}) {
-  final base = i.abs() < kZeroTol ? fv / n : fv * i / (pw(1 + i, n.toDouble()) - 1);
+  final base =
+      i.abs() < kZeroTol ? fv / n : fv * i / (pw(1 + i, n.toDouble()) - 1);
   return begin ? base / (1 + i) : base;
 }
 
 // C06
-double presentValue(double fv, double i, double n) => i.abs() < kZeroTol ? fv : fv / pw(1 + i, n);
+double presentValue(double fv, double i, double n) =>
+    i.abs() < kZeroTol ? fv : fv / pw(1 + i, n);
 
 // C07
 double cagr(double v0, double v1, double t) {
@@ -120,11 +125,13 @@ Projection project({
   return Projection(bal, inv, perYear);
 }
 
-ChartSpec chartFrom(Projection pr, {String value = 'Projected value', String invested = 'Amount invested'}) {
+ChartSpec chartFrom(Projection pr,
+    {String value = 'Projected value', String invested = 'Amount invested'}) {
   final cp = [0, ...pr.checkpoints()];
   final xs = cp.map((p) => p / pr.perYear).toList();
   return ChartSpec('Years', [
-    Series(invested, xs, cp.map((p) => pr.invested[p]).toList(), emphasis: false),
+    Series(invested, xs, cp.map((p) => pr.invested[p]).toList(),
+        emphasis: false),
     Series(value, xs, cp.map((p) => pr.balance[p]).toList()),
   ]);
 }
@@ -140,7 +147,8 @@ Schedule yearlySchedule(Projection pr, double Function(int p) contribution) {
     for (var p = prev; p < cp; p++) {
       contributed += contribution(p);
     }
-    rows.add([year.toDouble(), contribution(prev), contributed, pr.balance[cp]]);
+    rows.add(
+        [year.toDouble(), contribution(prev), contributed, pr.balance[cp]]);
     prev = cp;
     year++;
   }
@@ -148,7 +156,8 @@ Schedule yearlySchedule(Projection pr, double Function(int p) contribution) {
 }
 
 class LoanRow {
-  LoanRow(this.period, this.opening, this.payment, this.interest, this.principal, this.closing);
+  LoanRow(this.period, this.opening, this.payment, this.interest,
+      this.principal, this.closing);
   final int period;
   final double opening, payment, interest, principal, closing;
 }

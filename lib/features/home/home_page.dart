@@ -16,7 +16,8 @@ import '../calculator/calculator_screen.dart';
 import '../catalog/category_page.dart';
 
 void openCalc(BuildContext context, CalculatorDef d, {Scenario? existing}) =>
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => CalculatorScreen(def: d, existing: existing)));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => CalculatorScreen(def: d, existing: existing)));
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -73,26 +74,33 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   ),
                 ),
               ),
-              SearchField(controller: _search, onChanged: (v) => setState(() => _q = v)),
+              SearchField(
+                  controller: _search,
+                  onChanged: (v) => setState(() => _q = v)),
               if (_q.trim().isNotEmpty) ...[
-                SectionHeader('${results.length} result${results.length == 1 ? '' : 's'}'),
+                SectionHeader(
+                    '${results.length} result${results.length == 1 ? '' : 's'}'),
                 if (results.isEmpty)
                   const EmptyState(
                     icon: PhosphorIconsRegular.magnifyingGlass,
                     title: 'No calculators found',
-                    message: 'Try a different name, for example "loan" or "SIP".',
+                    message:
+                        'Try a different name, for example "loan" or "SIP".',
                   )
                 else
                   for (int i = 0; i < results.length; i++) ...[
                     if (i > 0) const SizedBox(height: AppSpacing.cardGap),
-                    CalcTile(def: results[i], onTap: () => openCalc(context, results[i])),
+                    CalcTile(
+                        def: results[i],
+                        onTap: () => openCalc(context, results[i])),
                   ],
               ] else ...[
                 if (favs.isNotEmpty) ...[
                   const SectionHeader('Favourites'),
                   for (int i = 0; i < favs.length; i++) ...[
                     if (i > 0) const SizedBox(height: AppSpacing.cardGap),
-                    CalcTile(def: favs[i], onTap: () => openCalc(context, favs[i])),
+                    CalcTile(
+                        def: favs[i], onTap: () => openCalc(context, favs[i])),
                   ],
                 ],
                 if (recents.isNotEmpty) ...[
@@ -103,16 +111,24 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       itemCount: recents.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
                       itemBuilder: (ctx, i) {
-                        final catColor = categoryAccent(ctx, recents[i].category);
+                        final catColor =
+                            categoryAccent(ctx, recents[i].category);
                         return ActionChip(
-                          avatar: Icon(iconForCalc(recents[i].id), size: 16, color: catColor),
+                          avatar: Icon(iconForCalc(recents[i].id),
+                              size: 16, color: catColor),
                           label: Text(recents[i].name),
-                          labelStyle: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                          backgroundColor: Theme.of(ctx).colorScheme.surfaceContainerHighest,
-                          side: BorderSide(color: Theme.of(ctx).colorScheme.outline),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                          labelStyle: t.labelLarge
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                          backgroundColor:
+                              Theme.of(ctx).colorScheme.surfaceContainerHighest,
+                          side: BorderSide(
+                              color: Theme.of(ctx).colorScheme.outline),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.pill)),
                           onPressed: () => openCalc(context, recents[i]),
                         );
                       },
@@ -138,14 +154,16 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                         final catColor = categoryAccent(ctx, c);
                         return AppCard(
                           onTap: () => Navigator.of(ctx).push(
-                            MaterialPageRoute(builder: (_) => CategoryPage(category: c)),
+                            MaterialPageRoute(
+                                builder: (_) => CategoryPage(category: c)),
                           ),
                           padding: const EdgeInsets.all(AppSpacing.md),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconBadge(iconForCategory(c), size: 36, color: catColor),
+                              IconBadge(iconForCategory(c),
+                                  size: 36, color: catColor),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -180,7 +198,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   final catColor = categoryAccent(ctx, c);
                   return AppCard(
                     onTap: () => Navigator.of(ctx).push(
-                      MaterialPageRoute(builder: (_) => const CategoryPage(category: c)),
+                      MaterialPageRoute(
+                          builder: (_) => const CategoryPage(category: c)),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
@@ -188,7 +207,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                     ),
                     child: Row(
                       children: [
-                        IconBadge(iconForCategory(c), size: 36, color: catColor),
+                        IconBadge(iconForCategory(c),
+                            size: 36, color: catColor),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(

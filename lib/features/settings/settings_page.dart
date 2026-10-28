@@ -29,7 +29,8 @@ class SettingsPage extends ConsumerStatefulWidget {
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerMixin {
+class _SettingsPageState extends ConsumerState<SettingsPage>
+    with ScrollDividerMixin {
   @override
   void initState() {
     super.initState();
@@ -45,27 +46,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
     final s = ref.watch(settingsProvider);
     final n = ref.read(settingsProvider.notifier);
     final cur = currencyByCode(s.currency);
-    final style = numberStyles.firstWhere((e) => e.locale == s.locale, orElse: () => numberStyles.first);
+    final style = numberStyles.firstWhere((e) => e.locale == s.locale,
+        orElse: () => numberStyles.first);
 
-    Widget group(String title, List<Widget> children) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Widget group(String title, List<Widget> children) =>
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SectionTitle(title),
           AppCard(padding: EdgeInsets.zero, child: Column(children: children)),
         ]);
 
-    Widget row(IconData icon, String title, String? subtitle, VoidCallback onTap, {bool last = false, Color? iconColor}) => Column(children: [
+    Widget row(
+            IconData icon, String title, String? subtitle, VoidCallback onTap,
+            {bool last = false, Color? iconColor}) =>
+        Column(children: [
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             leading: IconBadge(
               icon,
               size: 38,
               color: iconColor ?? p.primary,
             ),
-            title: Text(title, style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-            subtitle: subtitle == null ? null : Text(subtitle, style: t.bodySmall?.copyWith(color: p.inkMuted)),
-            trailing: Icon(PhosphorIconsRegular.caretRight, size: 16, color: p.inkSubtle),
+            title: Text(title,
+                style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            subtitle: subtitle == null
+                ? null
+                : Text(subtitle,
+                    style: t.bodySmall?.copyWith(color: p.inkMuted)),
+            trailing: Icon(PhosphorIconsRegular.caretRight,
+                size: 16, color: p.inkSubtle),
             onTap: onTap,
           ),
-          if (!last) Divider(height: 1, indent: 64, color: p.outline.withValues(alpha: 0.7)),
+          if (!last)
+            Divider(
+                height: 1, indent: 64, color: p.outline.withValues(alpha: 0.7)),
         ]);
 
     return Column(
@@ -108,14 +122,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                             ? const {ThemeMode.light}
                             : s.themeMode == ThemeMode.dark
                                 ? const {ThemeMode.dark}
-                                : (Theme.of(context).brightness == Brightness.dark
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
                                     ? const {ThemeMode.dark}
                                     : const <ThemeMode>{}),
                         onSelectionChanged: (set) {
                           if (set.isNotEmpty) {
                             n.setTheme(set.first);
                           } else {
-                            n.setTheme(s.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+                            n.setTheme(s.themeMode == ThemeMode.dark
+                                ? ThemeMode.light
+                                : ThemeMode.dark);
                           }
                         },
                       ),
@@ -137,18 +154,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                 ),
               ),
               group('Display', [
-                row(PhosphorIconsRegular.currencyCircleDollar, 'Currency', '${cur.name} (${cur.code})', () async {
-                  final v = await pickOne(context, title: 'Currency symbol', selected: s.currency, options: [for (final c in currencies) ChoiceOption(c.code, '${c.name}  ·  ${c.code}')]);
+                row(PhosphorIconsRegular.currencyCircleDollar, 'Currency',
+                    '${cur.name} (${cur.code})', () async {
+                  final v = await pickOne(context,
+                      title: 'Currency symbol',
+                      selected: s.currency,
+                      options: [
+                        for (final c in currencies)
+                          ChoiceOption(c.code, '${c.name}  ·  ${c.code}')
+                      ]);
                   if (v != null) n.setCurrency(v);
                 }),
-                row(PhosphorIconsRegular.listBullets, 'Number format', '${style.label}: ${style.example}', () async {
-                  final v = await pickOne(context, title: 'Number format', selected: s.locale, options: [for (final e in numberStyles) ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')]);
+                row(PhosphorIconsRegular.listBullets, 'Number format',
+                    '${style.label}: ${style.example}', () async {
+                  final v = await pickOne(context,
+                      title: 'Number format',
+                      selected: s.locale,
+                      options: [
+                        for (final e in numberStyles)
+                          ChoiceOption(e.locale, '${e.label}  ·  ${e.example}')
+                      ]);
                   if (v != null) n.setLocale(v);
                 }, last: true),
               ]),
               group('Backup', [
-                row(PhosphorIconsRegular.export, 'Export backup', 'Encrypted or plain file', () => _export(context, ref)),
-                row(PhosphorIconsRegular.downloadSimple, 'Restore backup', 'Preview before writing', () => _restore(context, ref), last: true),
+                row(PhosphorIconsRegular.export, 'Export backup',
+                    'Encrypted or plain file', () => _export(context, ref)),
+                row(PhosphorIconsRegular.downloadSimple, 'Restore backup',
+                    'Preview before writing', () => _restore(context, ref),
+                    last: true),
               ]),
               group('Privacy', [
                 Padding(
@@ -156,17 +190,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconBadge(PhosphorIconsFill.shieldCheck, size: 40, color: p.primary),
+                      IconBadge(PhosphorIconsFill.shieldCheck,
+                          size: 40, color: p.primary),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Offline and private', style: t.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            Text('Offline and private',
+                                style: t.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
                             Text(
                               'Finwise has no network permission, no account, no analytics, no ads and no cloud sync. Your data never leaves this device.',
-                              style: t.bodyMedium?.copyWith(height: 1.35, color: p.inkMuted),
+                              style: t.bodyMedium
+                                  ?.copyWith(height: 1.35, color: p.inkMuted),
                             ),
                           ],
                         ),
@@ -176,8 +214,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                 ),
               ]),
               group('Data', [
-                row(PhosphorIconsRegular.trash, 'Delete all data', 'Removes scenarios and settings', () async {
-                  final ok = await confirm(context, title: 'Delete all data?', message: 'All saved scenarios, favourites and settings on this device will be permanently removed.', action: 'Delete all');
+                row(PhosphorIconsRegular.trash, 'Delete all data',
+                    'Removes scenarios and settings', () async {
+                  final ok = await confirm(context,
+                      title: 'Delete all data?',
+                      message:
+                          'All saved scenarios, favourites and settings on this device will be permanently removed.',
+                      action: 'Delete all');
                   if (!ok) return;
                   await ref.read(scenariosProvider.notifier).clear();
                   await n.resetAll();
@@ -189,45 +232,66 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
                   PhosphorIconsRegular.squaresFour,
                   'Our Apps',
                   'Explore apps by Samyukt',
-                  () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OurAppsPage())),
+                  () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const OurAppsPage())),
                   last: true,
                 ),
               ]),
               group('App', [
-                row(PhosphorIconsRegular.shareNetwork, 'Share Finwise', 'Share with friends and family', () {
+                row(PhosphorIconsRegular.shareNetwork, 'Share Finwise',
+                    'Share with friends and family', () {
                   final box = context.findRenderObject() as RenderBox?;
                   final origin = box != null && box.hasSize
                       ? (box.localToGlobal(Offset.zero) & box.size)
                       : null;
                   AppInfoService.shareApp(sharePositionOrigin: origin);
                 }),
-                row(PhosphorIconsRegular.star, 'Rate Finwise', 'Review on Google Play', () => PlayService.openPlayStoreListing()),
-                row(PhosphorIconsRegular.arrowsClockwise, 'Check for updates', 'Check for Google Play updates', () => PlayService.checkForUpdateManual(context), last: true),
+                row(
+                    PhosphorIconsRegular.star,
+                    'Rate Finwise',
+                    'Review on Google Play',
+                    () => PlayService.openPlayStoreListing()),
+                row(
+                    PhosphorIconsRegular.arrowsClockwise,
+                    'Check for updates',
+                    'Check for Google Play updates',
+                    () => PlayService.checkForUpdateManual(context),
+                    last: true),
               ]),
               const SizedBox(height: AppSpacing.xl),
               Center(
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: p.surfaceAlt,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
-                        border: Border.all(color: p.outline.withValues(alpha: 0.6)),
+                        border:
+                            Border.all(color: p.outline.withValues(alpha: 0.6)),
                       ),
                       child: Text(
                         AppInfoService.formattedVersion,
-                        style: TextStyle(fontFamily: AppType.mono, fontSize: 11, fontWeight: FontWeight.w600, color: p.inkMuted),
+                        style: TextStyle(
+                            fontFamily: AppType.mono,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: p.inkMuted),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text('Results are estimates. Not financial advice.', textAlign: TextAlign.center, style: t.bodySmall?.copyWith(color: p.inkSubtle)),
+                    Text('Results are estimates. Not financial advice.',
+                        textAlign: TextAlign.center,
+                        style: t.bodySmall?.copyWith(color: p.inkSubtle)),
                     const SizedBox(height: 14),
                     InkWell(
                       borderRadius: BorderRadius.circular(AppRadius.sm),
-                      onTap: () => PlayService.openUrl(AppInfoService.samyuktUrl),
+                      onTap: () =>
+                          PlayService.openUrl(AppInfoService.samyuktUrl),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -260,13 +324,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
   }
 
   // ───────── backup flows ─────────
-  Future<T?> _busy<T>(BuildContext context, String label, Future<T> Function() work) async {
+  Future<T?> _busy<T>(
+      BuildContext context, String label, Future<T> Function() work) async {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => PopScope(
         canPop: false,
-        child: AlertDialog(content: Row(children: [const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)), const SizedBox(width: Sp.lg), Expanded(child: Text(label))])),
+        child: AlertDialog(
+            content: Row(children: [
+          const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 3)),
+          const SizedBox(width: Sp.lg),
+          Expanded(child: Text(label))
+        ])),
       ),
     );
     try {
@@ -276,32 +349,48 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
     }
   }
 
-  Future<String?> _passphrase(BuildContext context, {required bool confirmField}) {
+  Future<String?> _passphrase(BuildContext context,
+      {required bool confirmField}) {
     final a = TextEditingController(), b = TextEditingController();
     String? err;
     return showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
-          title: Text(confirmField ? 'Set backup passphrase' : 'Enter passphrase'),
+          title:
+              Text(confirmField ? 'Set backup passphrase' : 'Enter passphrase'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             if (confirmField)
               Padding(
                 padding: const EdgeInsets.only(bottom: Sp.md),
-                child: Text('If you lose this passphrase, the backup cannot be recovered.', style: Theme.of(ctx).textTheme.bodySmall),
+                child: Text(
+                    'If you lose this passphrase, the backup cannot be recovered.',
+                    style: Theme.of(ctx).textTheme.bodySmall),
               ),
-            TextField(controller: a, obscureText: true, autofocus: true, decoration: const InputDecoration(labelText: 'Passphrase')),
+            TextField(
+                controller: a,
+                obscureText: true,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Passphrase')),
             if (confirmField) ...[
               const SizedBox(height: Sp.md),
-              TextField(controller: b, obscureText: true, decoration: InputDecoration(labelText: 'Confirm passphrase', errorText: err)),
+              TextField(
+                  controller: b,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                      labelText: 'Confirm passphrase', errorText: err)),
             ],
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             TextButton(
               onPressed: () {
-                if (confirmField && a.text.length < 8) return setState(() => err = 'Use at least 8 characters');
-                if (confirmField && a.text != b.text) return setState(() => err = 'Passphrases do not match');
+                if (confirmField && a.text.length < 8)
+                  return setState(() => err = 'Use at least 8 characters');
+                if (confirmField && a.text != b.text)
+                  return setState(() => err = 'Passphrases do not match');
                 if (a.text.isEmpty) return;
                 Navigator.pop(ctx, a.text);
               },
@@ -316,11 +405,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final scenarios = await ref.read(scenariosProvider.future);
     if (!context.mounted) return;
-    if (scenarios.isEmpty) return toast(context, 'Nothing to back up yet. Save a scenario first.');
-    final mode = await pickOne(context, title: 'Backup type', selected: 'enc', options: const [
-      ChoiceOption('enc', 'Encrypted (recommended)'),
-      ChoiceOption('plain', 'Unencrypted file'),
-    ]);
+    if (scenarios.isEmpty)
+      return toast(context, 'Nothing to back up yet. Save a scenario first.');
+    final mode = await pickOne(context,
+        title: 'Backup type',
+        selected: 'enc',
+        options: const [
+          ChoiceOption('enc', 'Encrypted (recommended)'),
+          ChoiceOption('plain', 'Unencrypted file'),
+        ]);
     if (mode == null || !context.mounted) return;
     String? pass;
     if (mode == 'enc') {
@@ -328,11 +421,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
       if (pass == null || !context.mounted) return;
     }
     try {
-      final bytes = await _busy<Uint8List>(context, 'Preparing backup…', () => Isolate.run(() => BackupService.export(scenarios, passphrase: pass)));
+      final bytes = await _busy<Uint8List>(
+          context,
+          'Preparing backup…',
+          () => Isolate.run(
+              () => BackupService.export(scenarios, passphrase: pass)));
       if (bytes == null) return;
       final dir = await getTemporaryDirectory();
       final d = DateTime.now();
-      final name = 'finwise-backup-${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}.ofcbackup';
+      final name =
+          'finwise-backup-${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}.ofcbackup';
       final file = File('${dir.path}/$name');
       await file.writeAsBytes(bytes, flush: true);
       await Share.shareXFiles([XFile(file.path)], subject: 'Finwise backup');
@@ -352,12 +450,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
     }
     RestorePreview? prev;
     try {
-      prev = await _busy<RestorePreview>(context, 'Checking backup…', () => Isolate.run(() => BackupService.parse(bytes, passphrase: pass)));
+      prev = await _busy<RestorePreview>(
+          context,
+          'Checking backup…',
+          () =>
+              Isolate.run(() => BackupService.parse(bytes, passphrase: pass)));
     } on BackupException catch (e) {
       if (context.mounted) toast(context, e.message);
       return;
     } catch (_) {
-      if (context.mounted) toast(context, 'Wrong passphrase, or the file is damaged.');
+      if (context.mounted)
+        toast(context, 'Wrong passphrase, or the file is damaged.');
       return;
     }
     if (prev == null || !context.mounted) return;
@@ -366,11 +469,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Restore preview'),
-        content: Text('${items.scenarios.length} scenario(s) found${items.skipped > 0 ? ' (${items.skipped} invalid record(s) will be skipped)' : ''}.\n\nMerge keeps your current scenarios and adds or updates from the backup. Replace removes current scenarios first.'),
+        content: Text(
+            '${items.scenarios.length} scenario(s) found${items.skipped > 0 ? ' (${items.skipped} invalid record(s) will be skipped)' : ''}.\n\nMerge keeps your current scenarios and adds or updates from the backup. Replace removes current scenarios first.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, 'replace'), child: const Text('Replace')),
-          TextButton(onPressed: () => Navigator.pop(ctx, 'merge'), child: const Text('Merge')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, 'replace'),
+              child: const Text('Replace')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, 'merge'),
+              child: const Text('Merge')),
         ],
       ),
     );
@@ -380,8 +489,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with ScrollDividerM
       await notifier.clear();
       await notifier.saveAll(items.scenarios);
     } else {
-      final current = {for (final s in await ref.read(scenariosProvider.future)) s.id: s};
-      await notifier.saveAll([for (final s in items.scenarios) if (current[s.id] == null || current[s.id]!.updatedAt < s.updatedAt) s]);
+      final current = {
+        for (final s in await ref.read(scenariosProvider.future)) s.id: s
+      };
+      await notifier.saveAll([
+        for (final s in items.scenarios)
+          if (current[s.id] == null || current[s.id]!.updatedAt < s.updatedAt) s
+      ]);
     }
     if (context.mounted) toast(context, 'Backup restored.');
   }
@@ -406,7 +520,8 @@ class ThemeColorPicker extends StatelessWidget {
         final totalWidth = constraints.maxWidth;
         final count = AppPalette.all.length;
         // Optimal size between 36 and 42 dp to guarantee single-line fit with breathing room
-        final size = ((totalWidth - ((count - 1) * 8)) / count).clamp(36.0, 42.0);
+        final size =
+            ((totalWidth - ((count - 1) * 8)) / count).clamp(36.0, 42.0);
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -446,7 +561,9 @@ class ThemeColorPicker extends StatelessWidget {
                   child: selected
                       ? Icon(
                           Icons.check,
-                          color: p.id == 'amber_gold' ? const Color(0xFF0F172A) : Colors.white,
+                          color: p.id == 'amber_gold'
+                              ? const Color(0xFF0F172A)
+                              : Colors.white,
                           size: size * 0.48,
                         )
                       : null,
@@ -459,4 +576,3 @@ class ThemeColorPicker extends StatelessWidget {
     );
   }
 }
-
