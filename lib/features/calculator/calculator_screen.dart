@@ -11,6 +11,7 @@ import '../../core/validation.dart';
 import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
+import '../../shared/widgets/keyboard_accessory_sheet.dart';
 import '../../shared/widgets/result_view.dart';
 import '../../theme/app_radius.dart';
 import 'pdf_preview_screen.dart';
@@ -31,7 +32,9 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final Map<String, TextEditingController> _ctrl = {};
+  final Map<String, FocusNode> _focusNodes = {};
   final Map<String, String> _choices = {};
+  String? _focusedFieldId;
   bool _showAll = false;
   Scenario? _saved;
 
@@ -55,6 +58,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         _choices[f.id] = v is String ? v : f.defaultValue as String;
       } else {
         (_ctrl[f.id] ??= TextEditingController()).text = _initialText(v);
+        if (!_focusNodes.containsKey(f.id)) {
+          final fn = FocusNode();
+          fn.addListener(() {
+            if (fn.hasFocus) {
+              if (_focusedFieldId != f.id) {
+                setState(() => _focusedFieldId = f.id);
+              }
+            } else if (_focusedFieldId == f.id) {
+              final anyFocused =
+                  _focusNodes.values.any((node) => node.hasFocus);
+              if (!anyFocused) {
+                setState(() => _focusedFieldId = null);
+              }
+            }
+          });
+          _focusNodes[f.id] = fn;
+        }
       }
     }
   }
@@ -63,6 +83,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   void dispose() {
     for (final c in _ctrl.values) {
       c.dispose();
+    }
+    for (final fn in _focusNodes.values) {
+      fn.dispose();
     }
     super.dispose();
   }
@@ -158,6 +181,20 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         result = def.compute(CalcInputs(st.values));
       } on CalcException catch (e) {
         error = e.message;
+      }
+    }
+
+    final cur = fmt.currency.symbol.trim();
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    FieldDef? focusedField;
+    List<num>? focusedPresets;
+    if (_focusedFieldId != null) {
+      for (final f in def.fields) {
+        if (f.id == _focusedFieldId && f.visible(_choices)) {
+          focusedField = f;
+          focusedPresets = _getPresets(f);
+          break;
+        }
       }
     }
 
@@ -280,6 +317,26 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 ),
               ),
             ),
+            if (focusedField != null &&
+                focusedPresets != null &&
+                (keyboardOpen ||
+                    (_focusNodes[_focusedFieldId]?.hasFocus ?? false)))
+              KeyboardAccessorySheet(
+                fieldLabel: focusedField.label,
+                presets: focusedPresets,
+                currentValue: _ctrl[focusedField.id]?.text,
+                formatLabel: (val) =>
+                    _formatPresetLabel(focusedField!, val, cur),
+                onSelect: (val) {
+                  final text = val == val.roundToDouble()
+                      ? val.toInt().toString()
+                      : val.toString();
+                  _ctrl[focusedField!.id]?.text = text;
+                  _ctrl[focusedField.id]?.selection =
+                      TextSelection.collapsed(offset: text.length);
+                  setState(() => _dirty = true);
+                },
+              ),
           ],
         ),
       ),
@@ -288,9 +345,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   List<num>? _getPresets(FieldDef f) {
     if (f.money) return const [5000, 10000, 25000, 50000, 100000];
-    if (f.id == 'rate' || f.id == 'aRate' || f.id == 'bRate')
+    if (f.id == 'rate' || f.id == 'aRate' || f.id == 'bRate') {
       return const [6, 8, 10, 12, 15];
-    if (f.id == 'years') {
+    }
+    if (f.id == 'years' ||
+        f.id == 'yearsF' ||
+        f.id == 'yearsP' ||
+        f.id == 'yrs') {
       final unit = _choices['unit'];
       if (unit == 'days') return const [30, 90, 180, 365, 730];
       if (unit == 'months') return const [6, 12, 24, 36, 60];
@@ -301,7 +362,36 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (unit == 'months') return const [12, 24, 36, 60, 120];
       return const [5, 10, 15, 20, 25];
     }
+    if (f.id == 'stepup') return const [5, 10, 15, 20];
+    if (f.id == 'inflation') return const [4, 6, 8, 10];
+    if (f.id == 'nominal') return const [8, 10, 12, 15];
+    if (f.id == 'pctA' || f.id == 'pctAdj')
+      return const [5, 10, 15, 18, 20, 28];
     return null;
+  }
+
+  String _formatPresetLabel(FieldDef f, num val, String cur) {
+    final effectiveSuffix = (f.id == 'years' && _choices.containsKey('unit'))
+        ? _choices['unit']
+        : f.suffix;
+    if (f.money) {
+      final s = val.toInt().toString();
+      final withComma = s.length == 4
+          ? '${s[0]},${s.substring(1)}'
+          : (s.length == 5
+              ? '${s.substring(0, 2)},${s.substring(2)}'
+              : (s.length == 6
+                  ? '${s[0]},${s.substring(1, 3)},${s.substring(3)}'
+                  : s));
+      return cur.isNotEmpty ? '$cur $withComma' : withComma;
+    }
+    if (effectiveSuffix != null && effectiveSuffix.isNotEmpty) {
+      if (effectiveSuffix == '% per year' || effectiveSuffix == '%') {
+        return '$val%';
+      }
+      return '$val $effectiveSuffix';
+    }
+    return '$val';
   }
 
   Widget _numberField(FieldDef f, InputState st) {
@@ -311,97 +401,35 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final p = context.pal;
     final cur = ref.read(fmtProvider).currency.symbol.trim();
     final allowNeg = (f.min ?? 0) < 0;
-    final presets = _getPresets(f);
     final effectiveSuffix = (f.id == 'years' && _choices.containsKey('unit'))
         ? _choices['unit']
         : f.suffix;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: _ctrl[f.id],
-          keyboardType:
-              TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(
-                RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))
-          ],
-          onChanged: (_) => setState(() => _dirty = true),
-          style: AppType.figure(p.ink, size: 16),
-          decoration: InputDecoration(
-            labelText: f.label,
-            helperText: f.help,
-            helperMaxLines: 3,
-            errorText: err,
-            prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
-            prefixStyle: TextStyle(
-                fontFamily: AppType.mono,
-                fontSize: 16,
-                color: p.inkMuted,
-                fontWeight: FontWeight.w600),
-            suffixText: effectiveSuffix,
-            suffixStyle: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-        if (presets != null) ...[
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 30,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: presets.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 6),
-              itemBuilder: (_, i) {
-                final v = presets[i];
-                final isCurrent = _ctrl[f.id]?.text == v.toString();
-                String label = v.toString();
-                if (f.money) {
-                  label = cur.isNotEmpty ? '$cur$v' : '$v';
-                } else if (effectiveSuffix != null) {
-                  label = '$v $effectiveSuffix';
-                }
-                return InkWell(
-                  borderRadius: BorderRadius.circular(15),
-                  onTap: () {
-                    setState(() {
-                      _ctrl[f.id]?.text = v.toString();
-                      _dirty = true;
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? p.primary.withValues(alpha: 0.15)
-                          : p.surfaceAlt,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: isCurrent
-                            ? p.primary
-                            : p.outline.withValues(alpha: 0.7),
-                        width: 1,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: AppType.mono,
-                        fontSize: 11.5,
-                        fontWeight:
-                            isCurrent ? FontWeight.w700 : FontWeight.w500,
-                        color: isCurrent ? p.primary : p.inkMuted,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+    return TextField(
+      controller: _ctrl[f.id],
+      focusNode: _focusNodes[f.id],
+      keyboardType:
+          TextInputType.numberWithOptions(decimal: true, signed: allowNeg),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(
+            RegExp(allowNeg ? r'[0-9.\-]' : r'[0-9.]'))
       ],
+      onChanged: (_) => setState(() => _dirty = true),
+      style: AppType.figure(p.ink, size: 16),
+      decoration: InputDecoration(
+        labelText: f.label,
+        helperText: f.help,
+        helperMaxLines: 3,
+        errorText: err,
+        prefixText: f.money && cur.isNotEmpty ? '$cur ' : null,
+        prefixStyle: TextStyle(
+            fontFamily: AppType.mono,
+            fontSize: 16,
+            color: p.inkMuted,
+            fontWeight: FontWeight.w600),
+        suffixText: effectiveSuffix,
+        suffixStyle: Theme.of(context).textTheme.bodySmall,
+      ),
     );
   }
 
