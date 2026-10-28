@@ -362,11 +362,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (unit == 'months') return const [12, 24, 36, 60, 120];
       return const [5, 10, 15, 20, 25];
     }
-    if (f.id == 'stepup') return const [5, 10, 15, 20];
-    if (f.id == 'inflation') return const [4, 6, 8, 10];
-    if (f.id == 'nominal') return const [8, 10, 12, 15];
-    if (f.id == 'pctA' || f.id == 'pctAdj')
+    if (f.id == 'stepup') {
+      return const [5, 10, 15, 20];
+    }
+    if (f.id == 'inflation') {
+      return const [4, 6, 8, 10];
+    }
+    if (f.id == 'nominal') {
+      return const [8, 10, 12, 15];
+    }
+    if (f.id == 'pctA' || f.id == 'pctAdj') {
       return const [5, 10, 15, 18, 20, 28];
+    }
     return null;
   }
 

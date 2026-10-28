@@ -31,6 +31,12 @@ const _durationUnits = [
   ChoiceOption('months', 'Months'),
   ChoiceOption('days', 'Days'),
 ];
+const _payoutOptions = [
+  ChoiceOption('maturity', 'On Maturity'),
+  ChoiceOption('monthly', 'Monthly'),
+  ChoiceOption('quarterly', 'Quarterly'),
+  ChoiceOption('yearly', 'Yearly'),
+];
 
 String _compoundingName(int m) {
   switch (m) {
@@ -131,7 +137,8 @@ CalcResult _compound(CalcInputs x) {
   final r = x.n('rate');
   final durationVal = x.n('years');
   final unit = x.values.containsKey('unit') ? x.s('unit') : 'years';
-  final m = int.parse(x.s('m'));
+  final payout = x.values.containsKey('payout') ? x.s('payout') : 'maturity';
+  final m = x.values.containsKey('m') ? int.parse(x.s('m')) : 12;
 
   late final double tInYears;
   late final String durationLabel;
@@ -165,7 +172,9 @@ CalcResult _compound(CalcInputs x) {
       for (var s = step; s < durationVal; s += step) {
         pts.add(s);
       }
-      if (pts.last != durationVal) pts.add(durationVal);
+      if (pts.last != durationVal) {
+        pts.add(durationVal);
+      }
       toYears = (d) => d / 365.0;
       break;
 
@@ -188,7 +197,9 @@ CalcResult _compound(CalcInputs x) {
       for (var s = step; s < durationVal; s += step) {
         pts.add(s);
       }
-      if (pts.last != durationVal) pts.add(durationVal);
+      if (pts.last != durationVal) {
+        pts.add(durationVal);
+      }
       toYears = (mo) => mo / 12.0;
       break;
 
@@ -207,39 +218,111 @@ CalcResult _compound(CalcInputs x) {
       break;
   }
 
-  final a = compoundValue(p, r, tInYears, m);
-  final ys = pts.map((pt) => compoundValue(p, r, toYears(pt), m)).toList();
+  if (payout == 'maturity') {
+    final a = compoundValue(p, r, tInYears, m);
+    final ys = pts.map((pt) => compoundValue(p, r, toYears(pt), m)).toList();
+    final rows = <List<double>>[];
+    for (var i = 1; i < pts.length; i++) {
+      rows.add([pts[i], ys[i - 1], ys[i] - ys[i - 1], ys[i]]);
+    }
+    final ear = r == 0 ? 0.0 : (pw(1 + (r / 100) / m, m.toDouble()) - 1) * 100;
+
+    return CalcResult(
+      primary: ResultRow('Estimated final value', a),
+      rows: [
+        ResultRow('Principal', p),
+        ResultRow('Estimated interest', a - p),
+        ResultRow('Effective annual rate', ear, kind: ValueKind.percent),
+        const ResultRow.text('Interest payment', 'On Maturity'),
+        if (unit == 'years')
+          ResultRow('Duration', durationVal, kind: ValueKind.years)
+        else
+          ResultRow.text('Duration', durationLabel),
+      ],
+      assumptions: [
+        'Interest payment: On Maturity (Compounded at chosen frequency).',
+        'Compounding frequency: ${_compoundingName(m)} ($m period(s) per year).',
+        conventionNote,
+        if (m == 365 && unit == 'days')
+          'Under daily compounding and 365-day convention: A = P × (1 + r/365)^d.'
+        else
+          'Conventional nominal-rate model: A = P × (1 + r/m)^(m×t).',
+        'No deposits, withdrawals, fees or taxes are modelled.',
+      ],
+      chart: ChartSpec(xLabel, [
+        Series('Principal', pts, pts.map((_) => p).toList(), emphasis: false),
+        Series('Estimated value', pts, ys),
+      ]),
+      schedule: Schedule([col0Name, 'Opening', 'Interest', 'Closing'], rows),
+    );
+  }
+
+  // Periodic interest payout (Monthly, Quarterly, Yearly)
+  late final String payoutName;
+  late final String payoutLabel;
+  late final int payoutPeriodsPerYr;
+  late final double periodicPayout;
+
+  switch (payout) {
+    case 'monthly':
+      payoutName = 'Monthly';
+      payoutLabel = 'Monthly interest payout';
+      payoutPeriodsPerYr = 12;
+      periodicPayout = (p * (r / 100.0)) / 12.0;
+      break;
+    case 'quarterly':
+      payoutName = 'Quarterly';
+      payoutLabel = 'Quarterly interest payout';
+      payoutPeriodsPerYr = 4;
+      periodicPayout = (p * (r / 100.0)) / 4.0;
+      break;
+    case 'yearly':
+    default:
+      payoutName = 'Yearly';
+      payoutLabel = 'Annual interest payout';
+      payoutPeriodsPerYr = 1;
+      periodicPayout = p * (r / 100.0);
+      break;
+  }
+
+  final totalInterest = p * (r / 100.0) * tInYears;
+  final totalPayout = p + totalInterest;
+
   final rows = <List<double>>[];
   for (var i = 1; i < pts.length; i++) {
-    rows.add([pts[i], ys[i - 1], ys[i] - ys[i - 1], ys[i]]);
+    final periodInterest =
+        p * (r / 100.0) * (toYears(pts[i]) - toYears(pts[i - 1]));
+    final cumInterest = p * (r / 100.0) * toYears(pts[i]);
+    rows.add([pts[i], p, periodInterest, p + cumInterest]);
   }
-  final ear = r == 0 ? 0.0 : (pw(1 + (r / 100) / m, m.toDouble()) - 1) * 100;
+
+  final ys = pts.map((pt) => p + p * (r / 100.0) * toYears(pt)).toList();
 
   return CalcResult(
-    primary: ResultRow('Estimated final value', a),
+    primary: ResultRow('Total payout received', totalPayout),
     rows: [
       ResultRow('Principal', p),
-      ResultRow('Estimated interest', a - p),
-      ResultRow('Effective annual rate', ear, kind: ValueKind.percent),
+      ResultRow('Total interest payout', totalInterest),
+      ResultRow(payoutLabel, periodicPayout),
+      ResultRow.text('Interest payment', payoutName),
       if (unit == 'years')
         ResultRow('Duration', durationVal, kind: ValueKind.years)
       else
         ResultRow.text('Duration', durationLabel),
     ],
     assumptions: [
-      'Compounding frequency: ${_compoundingName(m)} ($m period(s) per year).',
+      'Interest payment: $payoutName ($payoutPeriodsPerYr payout(s) per year).',
+      'Periodic interest is paid directly to depositor; principal is returned at maturity.',
       conventionNote,
-      if (m == 365 && unit == 'days')
-        'Under daily compounding and 365-day convention: A = P × (1 + r/365)^d.'
-      else
-        'Conventional nominal-rate model: A = P × (1 + r/m)^(m×t).',
-      'No deposits, withdrawals, fees or taxes are modelled.',
+      'Total interest = Principal × (Rate ÷ 100) × Time.',
+      'No fees or taxes are modelled.',
     ],
     chart: ChartSpec(xLabel, [
       Series('Principal', pts, pts.map((_) => p).toList(), emphasis: false),
-      Series('Estimated value', pts, ys),
+      Series('Total payout received', pts, ys),
     ]),
-    schedule: Schedule([col0Name, 'Opening', 'Interest', 'Closing'], rows),
+    schedule: Schedule(
+        [col0Name, 'Principal', 'Interest Payout', 'Total Received'], rows),
   );
 }
 
@@ -776,13 +859,19 @@ final List<CalculatorDef> catalog = [
       'lumpsum',
       'future value',
       'interest on interest',
-      'daily compound'
+      'daily compound',
+      'fd',
+      'fixed deposit',
+      'term deposit',
+      'interest payment',
+      'interest payout',
     ],
     formula: [
-      'A = P × (1 + r/m)^(m×t)',
+      'On Maturity: A = P × (1 + r/m)^(m×t)',
+      'Periodic Payout: Periodic Interest = (P × r) ÷ Payout Frequency',
+      'Total Payout = Principal + Total Interest',
       't = years, or months ÷ 12, or days ÷ 365',
       'Daily compounding: A = P × (1 + r/365)^d',
-      'Interest = A − P',
       'If r = 0, A = P',
     ],
     fields: [
@@ -796,7 +885,9 @@ final List<CalculatorDef> catalog = [
           max: 36500,
           suffix: 'years'),
       _choice('unit', 'Duration unit', _durationUnits, 'years'),
-      _choice('m', 'Compounding', _compounding, '12'),
+      _choice('payout', 'Interest payment', _payoutOptions, 'maturity'),
+      _choice('m', 'Compounding', _compounding, '12',
+          showField: 'payout', showValue: 'maturity'),
     ],
     compute: _compound,
   ),

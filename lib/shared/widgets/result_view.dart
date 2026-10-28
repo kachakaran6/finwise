@@ -611,8 +611,9 @@ class _ChartState extends State<_Chart> {
                     showTitles: true,
                     reservedSize: 52,
                     getTitlesWidget: (v, meta) {
-                      if (v == meta.min || v == meta.max)
+                      if (v == meta.min || v == meta.max) {
                         return const SizedBox.shrink();
+                      }
                       return Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: Text(widget.fmt.axis(v),
