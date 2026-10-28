@@ -5,9 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/format.dart';
 import '../data/storage.dart';
 import '../domain/models/calc.dart';
+import '../features/custom_studio/data/custom_calc_repository.dart';
+import '../features/custom_studio/domain/models/custom_calc_definition.dart';
 
-final prefsProvider = Provider<SharedPreferences>((_) => throw UnimplementedError());
-final repoProvider = Provider<ScenarioRepository>((_) => throw UnimplementedError());
+final prefsProvider =
+    Provider<SharedPreferences>((_) => throw UnimplementedError());
+final repoProvider =
+    Provider<ScenarioRepository>((_) => throw UnimplementedError());
 
 class AppSettings {
   const AppSettings({
@@ -30,7 +34,8 @@ class AppSettings {
     String? locale,
     List<String>? favorites,
     List<String>? recents,
-  }) => AppSettings(
+  }) =>
+      AppSettings(
         themeMode: themeMode ?? this.themeMode,
         paletteId: paletteId ?? this.paletteId,
         currency: currency ?? this.currency,
@@ -46,10 +51,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
   @override
   AppSettings build() {
     _p = ref.read(prefsProvider);
-    final theme = _p.getString('theme') ?? _p.getString('theme_mode') ?? 'system';
+    final theme =
+        _p.getString('theme') ?? _p.getString('theme_mode') ?? 'system';
     final palette = _p.getString('theme_palette') ?? 'finwise_green';
     return AppSettings(
-      themeMode: ThemeMode.values.firstWhere((m) => m.name == theme, orElse: () => ThemeMode.system),
+      themeMode: ThemeMode.values
+          .firstWhere((m) => m.name == theme, orElse: () => ThemeMode.system),
       paletteId: palette,
       currency: _p.getString('currency') ?? 'INR',
       locale: _p.getString('locale') ?? 'en_IN',
@@ -103,7 +110,8 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 }
 
-final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
+final settingsProvider =
+    NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
 
 final fmtProvider = Provider<Fmt>((ref) {
   final s = ref.watch(settingsProvider);
@@ -114,7 +122,8 @@ class ScenariosNotifier extends AsyncNotifier<List<Scenario>> {
   @override
   Future<List<Scenario>> build() => ref.read(repoProvider).all();
 
-  Future<void> _reload() async => state = AsyncData(await ref.read(repoProvider).all());
+  Future<void> _reload() async =>
+      state = AsyncData(await ref.read(repoProvider).all());
 
   Future<void> save(Scenario s) async {
     await ref.read(repoProvider).upsert(s);
@@ -137,6 +146,43 @@ class ScenariosNotifier extends AsyncNotifier<List<Scenario>> {
   }
 }
 
-final scenariosProvider = AsyncNotifierProvider<ScenariosNotifier, List<Scenario>>(ScenariosNotifier.new);
+final scenariosProvider =
+    AsyncNotifierProvider<ScenariosNotifier, List<Scenario>>(
+        ScenariosNotifier.new);
 
-String newId() => '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${(DateTime.now().millisecond * 7919 % 9973).toRadixString(36)}';
+final customCalcRepoProvider = Provider<CustomCalcRepository>(
+    (ref) => ref.watch(repoProvider).customCalcRepo);
+
+class CustomCalcsNotifier extends AsyncNotifier<List<CustomCalcDefinition>> {
+  @override
+  Future<List<CustomCalcDefinition>> build() =>
+      ref.read(customCalcRepoProvider).all();
+
+  Future<void> reload() async {
+    state = const AsyncLoading();
+    state = AsyncData(await ref.read(customCalcRepoProvider).all());
+  }
+
+  Future<void> save(CustomCalcDefinition def) async {
+    await ref.read(customCalcRepoProvider).save(def);
+    await reload();
+  }
+
+  Future<void> delete(String id) async {
+    await ref.read(customCalcRepoProvider).delete(id);
+    await reload();
+  }
+
+  Future<CustomCalcDefinition> duplicate(String id) async {
+    final copy = await ref.read(customCalcRepoProvider).duplicate(id);
+    await reload();
+    return copy;
+  }
+}
+
+final customCalcsProvider =
+    AsyncNotifierProvider<CustomCalcsNotifier, List<CustomCalcDefinition>>(
+        CustomCalcsNotifier.new);
+
+String newId() =>
+    '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${(DateTime.now().millisecond * 7919 % 9973).toRadixString(36)}';

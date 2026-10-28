@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-import '../domain/models/calc.dart';
+import '../features/custom_studio/data/custom_calc_repository.dart';
 
 /// Local-first scenario storage (SQLite). Works fully offline.
 class ScenarioRepository {
@@ -15,22 +15,54 @@ class ScenarioRepository {
   final Database? _db;
   final List<Scenario>? _memory;
 
+  late final CustomCalcRepository customCalcRepo = _db != null
+      ? CustomCalcRepository.fromDb(_db)
+      : CustomCalcRepository.inMemory();
+
   static Future<ScenarioRepository> open() async {
     final path = p.join(await getDatabasesPath(), 'finance_calculator.db');
     final db = await openDatabase(
       path,
-      version: 1,
-      onCreate: (db, v) => db.execute('''
-        CREATE TABLE scenarios(
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          calc_id TEXT NOT NULL,
-          inputs TEXT NOT NULL,
-          snapshot TEXT NOT NULL,
-          schema_version INTEGER NOT NULL,
-          created_at INTEGER NOT NULL,
-          updated_at INTEGER NOT NULL
-        )'''),
+      version: 2,
+      onCreate: (db, v) async {
+        await db.execute('''
+          CREATE TABLE scenarios(
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            calc_id TEXT NOT NULL,
+            inputs TEXT NOT NULL,
+            snapshot TEXT NOT NULL,
+            schema_version INTEGER NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )''');
+        await db.execute('''
+          CREATE TABLE custom_calculators(
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            schema_version INTEGER NOT NULL,
+            is_draft INTEGER NOT NULL,
+            definition TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )''');
+      },
+      onUpgrade: (db, oldV, newV) async {
+        if (oldV < 2) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS custom_calculators(
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              description TEXT,
+              schema_version INTEGER NOT NULL,
+              is_draft INTEGER NOT NULL,
+              definition TEXT NOT NULL,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )''');
+        }
+      },
     );
     return ScenarioRepository._(db);
   }
@@ -50,8 +82,10 @@ class ScenarioRepository {
         id: r['id'] as String,
         title: r['title'] as String,
         calcId: r['calc_id'] as String,
-        inputs: Map<String, dynamic>.from(jsonDecode(r['inputs'] as String) as Map),
-        snapshot: Map<String, dynamic>.from(jsonDecode(r['snapshot'] as String) as Map),
+        inputs:
+            Map<String, dynamic>.from(jsonDecode(r['inputs'] as String) as Map),
+        snapshot: Map<String, dynamic>.from(
+            jsonDecode(r['snapshot'] as String) as Map),
         schemaVersion: r['schema_version'] as int,
         createdAt: r['created_at'] as int,
         updatedAt: r['updated_at'] as int,
@@ -73,7 +107,8 @@ class ScenarioRepository {
       _memory.add(s);
       return;
     }
-    await _db!.insert('scenarios', _toRow(s), conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db!.insert('scenarios', _toRow(s),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> upsertAll(List<Scenario> list) async {
@@ -86,7 +121,8 @@ class ScenarioRepository {
     }
     final batch = _db!.batch();
     for (final s in list) {
-      batch.insert('scenarios', _toRow(s), conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert('scenarios', _toRow(s),
+          conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }
