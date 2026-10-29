@@ -410,14 +410,14 @@ void main() {
       expect(res.rows[3].text, 'On Maturity');
     });
 
-    test(
-        'Dynamic field visibility: Compounding is only visible when payout is maturity',
-        () {
+    test('Both Compounding and Interest payment fields are always visible', () {
       final mField = comp.fields.firstWhere((f) => f.id == 'm');
+      final payoutField = comp.fields.firstWhere((f) => f.id == 'payout');
       expect(mField.visible({'payout': 'maturity'}), isTrue);
-      expect(mField.visible({'payout': 'monthly'}), isFalse);
-      expect(mField.visible({'payout': 'quarterly'}), isFalse);
-      expect(mField.visible({'payout': 'yearly'}), isFalse);
+      expect(mField.visible({'payout': 'monthly'}), isTrue);
+      expect(mField.visible({'payout': 'quarterly'}), isTrue);
+      expect(mField.visible({'payout': 'yearly'}), isTrue);
+      expect(payoutField.visible({}), isTrue);
     });
   });
 
