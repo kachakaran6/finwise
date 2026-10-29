@@ -131,7 +131,7 @@ class BackupService {
     final created = e['createdAt'], updated = e['updatedAt'], sv = e['schemaVersion'];
     if (id is! String || id.isEmpty || id.length > 64) return null;
     if (title is! String || title.length > 200) return null;
-    if (calcId is! String || calcById(calcId) == null) return null;
+    if (calcId is! String || (calcById(calcId) == null && !calcId.startsWith('custom_'))) return null;
     if (inputs is! Map || inputs.length > 40 || snap is! Map) return null;
     for (final val in inputs.values) {
       if (val is! num && val is! String) return null;

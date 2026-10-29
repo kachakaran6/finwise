@@ -102,6 +102,15 @@ class ScenarioRepository {
     return rows.map(_fromRow).toList();
   }
 
+  Future<Scenario?> get(String id) async {
+    if (_memory != null) {
+      return _memory.where((e) => e.id == id).firstOrNull;
+    }
+    final rows = await _db!.query('scenarios', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return null;
+    return _fromRow(rows.first);
+  }
+
   Future<void> upsert(Scenario s) async {
     if (_memory != null) {
       _memory.removeWhere((e) => e.id == s.id);
