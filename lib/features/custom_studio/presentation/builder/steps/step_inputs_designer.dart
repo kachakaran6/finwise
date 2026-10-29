@@ -91,30 +91,36 @@ class StepInputsDesigner extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Input Fields (${inputs.length})',
-                    style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    'Drag handles to reorder inputs',
-                    style: t.bodySmall?.copyWith(color: p.inkSubtle),
-                  ),
-                ],
-              ),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Input Fields (${inputs.length})',
+                      style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tap to configure, drag handles to reorder',
+                      style: t.bodySmall?.copyWith(color: p.inkSubtle),
+                    ),
+                  ],
                 ),
-                icon: const Icon(PhosphorIconsRegular.plus, size: 16),
-                label: const Text('Add Input'),
-                onPressed: () => _addInput(context),
               ),
+              if (inputs.isNotEmpty)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: p.primary,
+                    foregroundColor: p.onPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+                  icon: const Icon(PhosphorIconsBold.plus, size: 15),
+                  label: const Text('Add Input', style: TextStyle(fontWeight: FontWeight.w700)),
+                  onPressed: () => _addInput(context),
+                ),
             ],
           ),
         ),
@@ -125,6 +131,7 @@ class StepInputsDesigner extends StatelessWidget {
               : ReorderableListView.builder(
                   padding: const EdgeInsets.all(AppSpacing.screen),
                   itemCount: inputs.length,
+                  // ignore: deprecated_member_use
                   onReorder: (oldIndex, newIndex) {
                     final updated = List<CustomInputDef>.from(inputs);
                     if (oldIndex < newIndex) newIndex -= 1;
@@ -151,50 +158,87 @@ class StepInputsDesigner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: p.outline),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
-          leading: Icon(_iconForType(input.type), size: 22, color: p.primary),
-          title: Text(input.label, style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: p.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Icon(_iconForType(input.type), size: 20, color: p.primary),
+          ),
+          title: Text(
+            input.label,
+            style: t.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           subtitle: input.isComputational
               ? Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: p.surfaceAlt,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        input.id,
-                        style: AppType.figure(p.inkSubtle, size: 12),
+                    Flexible(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: p.surfaceAlt,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          input.id,
+                          style: AppType.figure(p.inkSubtle, size: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      '• ${_labelForType(input.type)}',
-                      style: t.bodySmall?.copyWith(color: p.inkSubtle),
+                    Flexible(
+                      child: Text(
+                        '• ${_labelForType(input.type)}',
+                        style: t.bodySmall?.copyWith(color: p.inkSubtle),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 )
               : Text(
                   _labelForType(input.type),
                   style: t.bodySmall?.copyWith(color: p.inkSubtle),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
                 icon: const Icon(PhosphorIconsRegular.copy, size: 18),
                 tooltip: 'Duplicate',
                 onPressed: () => _duplicateInput(index),
               ),
               IconButton(
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
                 icon: Icon(PhosphorIconsRegular.trash, size: 18, color: p.loss),
                 tooltip: 'Delete',
                 onPressed: () => _deleteInput(index),
@@ -219,32 +263,126 @@ class StepInputsDesigner extends StatelessWidget {
     final t = Theme.of(context).textTheme;
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screen,
+          vertical: AppSpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(PhosphorIconsRegular.slidersHorizontal, size: 48, color: p.inkSubtle),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: p.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: p.primary.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(
+                PhosphorIconsBold.slidersHorizontal,
+                size: 34,
+                color: p.primary,
+              ),
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'No input fields yet',
               style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Add numeric, currency, percentage, dropdown, or toggle widgets to capture user inputs for your formulas.',
-              textAlign: TextAlign.center,
-              style: t.bodySmall?.copyWith(color: p.inkSubtle),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                'Add numeric, currency, percentage, dropdown, or toggle widgets to capture user inputs for your formulas.',
+                textAlign: TextAlign.center,
+                style: t.bodySmall?.copyWith(color: p.inkSubtle),
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: p.outline),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(PhosphorIconsBold.lightbulb, size: 16, color: p.primary),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        'Input Types Available',
+                        style: t.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: p.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildTipRow(context, 'Numeric', 'Currency, Percentages, Decimals, Sliders'),
+                  const SizedBox(height: 6),
+                  _buildTipRow(context, 'Choices', 'Dropdown lists, Boolean toggle switches'),
+                  const SizedBox(height: 6),
+                  _buildTipRow(context, 'Content', 'Dates, Section headers, Explanatory notes'),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
             FilledButton.icon(
-              icon: const Icon(PhosphorIconsRegular.plus, size: 18),
-              label: const Text('Add First Input'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+              ),
+              icon: const Icon(PhosphorIconsBold.plus, size: 18),
+              label: const Text(
+                'Add First Input',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
               onPressed: () => _addInput(context),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTipRow(BuildContext context, String title, String detail) {
+    final p = context.pal;
+    final t = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 72,
+          child: Text(
+            title,
+            style: t.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: p.inkSubtle,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            detail,
+            style: t.bodySmall?.copyWith(
+              color: p.ink,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

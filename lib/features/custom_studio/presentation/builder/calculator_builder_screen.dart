@@ -170,14 +170,22 @@ class _CalculatorBuilderScreenState
             AppHeader(
               title: widget.initial == null ? 'Create Calculator' : 'Edit Calculator',
               actions: [
-                TextButton(
-                  onPressed: _saveAndPublish,
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      color: p.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: p.primary,
+                      foregroundColor: p.onPrimary,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      minimumSize: const Size(0, 34),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                    onPressed: _saveAndPublish,
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                     ),
                   ),
                 ),
@@ -185,20 +193,50 @@ class _CalculatorBuilderScreenState
             ),
             // Step Navigation Indicator
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
               decoration: BoxDecoration(
                 color: p.surface,
                 border: Border(bottom: BorderSide(color: p.outline)),
               ),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.xs,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildStepChip(0, '1. Info'),
-                  const SizedBox(width: AppSpacing.xs),
-                  _buildStepChip(1, '2. Inputs (${_inputs.length})'),
-                  const SizedBox(width: AppSpacing.xs),
-                  _buildStepChip(2, '3. Formulas (${_outputs.length})'),
-                  const SizedBox(width: AppSpacing.xs),
-                  _buildStepChip(3, '4. Preview'),
+                  // Segmented step progress indicator
+                  Row(
+                    children: List.generate(4, (index) {
+                      final isCompletedOrCurrent = index <= _currentStep;
+                      return Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(right: index < 3 ? 4.0 : 0.0),
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: isCompletedOrCurrent
+                                ? p.primary
+                                : p.outline.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  // Step pill navigation
+                  Row(
+                    children: [
+                      _buildStepChip(0, '1. Info'),
+                      const SizedBox(width: 4),
+                      _buildStepChip(1, '2. Inputs (${_inputs.length})'),
+                      const SizedBox(width: 4),
+                      _buildStepChip(2, '3. Formulas (${_outputs.length})'),
+                      const SizedBox(width: 4),
+                      _buildStepChip(3, '4. Preview'),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -246,7 +284,10 @@ class _CalculatorBuilderScreenState
             // Bottom Step Bar
             if (_currentStep < 3)
               Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screen,
+                  vertical: AppSpacing.sm,
+                ),
                 decoration: BoxDecoration(
                   color: p.surface,
                   border: Border(top: BorderSide(color: p.outline)),
@@ -254,30 +295,62 @@ class _CalculatorBuilderScreenState
                 child: SafeArea(
                   top: false,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (_currentStep > 0)
-                        OutlinedButton.icon(
-                          icon: const Icon(PhosphorIconsRegular.arrowLeft, size: 16),
-                          label: const Text('Back'),
-                          onPressed: () {
-                            setState(() => _currentStep -= 1);
-                            _autoSaveDraft();
-                          },
-                        )
-                      else
-                        const SizedBox.shrink(),
-                      FilledButton.icon(
-                        icon: const Icon(PhosphorIconsRegular.arrowRight, size: 16),
-                        label: Text(_currentStep == 2 ? 'Preview Calculator' : 'Next Step'),
-                        onPressed: () {
-                          if (_currentStep == 0 && _nameCtrl.text.trim().isEmpty) {
-                            setState(() => _nameError = 'Calculator name is required');
-                            return;
-                          }
-                          setState(() => _currentStep += 1);
-                          _autoSaveDraft();
-                        },
+                      if (_currentStep > 0) ...[
+                        Expanded(
+                          flex: 1,
+                          child: SizedBox(
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: p.outline),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppRadius.md),
+                                ),
+                              ),
+                              icon: const Icon(PhosphorIconsBold.arrowLeft, size: 16),
+                              label: const Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
+                              onPressed: () {
+                                setState(() => _currentStep -= 1);
+                                _autoSaveDraft();
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                      ],
+                      Expanded(
+                        flex: _currentStep > 0 ? 2 : 1,
+                        child: SizedBox(
+                          height: 48,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: p.primary,
+                              foregroundColor: p.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            icon: Icon(
+                              _currentStep == 2
+                                  ? PhosphorIconsBold.play
+                                  : PhosphorIconsBold.arrowRight,
+                              size: 16,
+                            ),
+                            label: Text(
+                              _currentStep == 2 ? 'Preview Calculator' : 'Next Step',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                            ),
+                            onPressed: () {
+                              if (_currentStep == 0 && _nameCtrl.text.trim().isEmpty) {
+                                setState(() => _nameError = 'Calculator name is required');
+                                return;
+                              }
+                              setState(() => _currentStep += 1);
+                              _autoSaveDraft();
+                            },
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -293,29 +366,65 @@ class _CalculatorBuilderScreenState
     final p = context.pal;
     final t = Theme.of(context).textTheme;
     final isSelected = _currentStep == stepIndex;
+    final isPast = stepIndex < _currentStep;
 
     return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        onTap: () {
-          setState(() => _currentStep = stepIndex);
-          _autoSaveDraft();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? p.primary.withValues(alpha: 0.12) : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: isSelected ? Border.all(color: p.primary) : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: t.labelSmall?.copyWith(
-                color: isSelected ? p.primary : p.inkSubtle,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          onTap: () {
+            setState(() => _currentStep = stepIndex);
+            _autoSaveDraft();
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? p.primary.withValues(alpha: 0.12)
+                  : isPast
+                      ? p.surfaceAlt.withValues(alpha: 0.6)
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              border: Border.all(
+                color: isSelected
+                    ? p.primary
+                    : isPast
+                        ? p.outline.withValues(alpha: 0.8)
+                        : Colors.transparent,
+                width: isSelected ? 1.5 : 1.0,
+              ),
+            ),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isPast) ...[
+                      Icon(
+                        PhosphorIconsBold.check,
+                        size: 11,
+                        color: p.primary,
+                      ),
+                      const SizedBox(width: 3),
+                    ],
+                    Text(
+                      label,
+                      maxLines: 1,
+                      style: t.labelSmall?.copyWith(
+                        color: isSelected
+                            ? p.primary
+                            : isPast
+                                ? p.ink
+                                : p.inkSubtle,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

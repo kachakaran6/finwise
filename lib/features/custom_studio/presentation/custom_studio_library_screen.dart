@@ -216,15 +216,30 @@ class _CustomStudioLibraryScreenState
             actions: [
               AppHeaderAction(
                 icon: PhosphorIconsRegular.fileArrowDown,
-                tooltip: 'Import Calculator',
+                tooltip: 'Import JSON',
                 onPressed: _importCalculator,
               ),
-              AppHeaderAction(
-                icon: PhosphorIconsRegular.plus,
-                tooltip: 'Create Calculator',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const CalculatorBuilderScreen(),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: p.primary,
+                    foregroundColor: p.onPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    minimumSize: const Size(0, 34),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+                  icon: const Icon(PhosphorIconsBold.plus, size: 14),
+                  label: const Text(
+                    'Create',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CalculatorBuilderScreen(),
+                    ),
                   ),
                 ),
               ),
@@ -254,22 +269,44 @@ class _CustomStudioLibraryScreenState
                       )
                     : null,
                 isDense: true,
+                filled: true,
+                fillColor: p.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  borderSide: BorderSide(color: p.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  borderSide: BorderSide(color: p.outline),
+                ),
               ),
             ),
           ),
           // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen, vertical: AppSpacing.xs),
-            child: Row(
-              children: [
-                _buildFilterChip('all', 'All'),
-                const SizedBox(width: AppSpacing.xs),
-                _buildFilterChip('published', 'Published'),
-                const SizedBox(width: AppSpacing.xs),
-                _buildFilterChip('drafts', 'Drafts'),
-              ],
-            ),
+          calcsAsync.maybeWhen(
+            data: (calcs) {
+              if (calcs.isEmpty) return const SizedBox.shrink();
+              final publishedCount = calcs.where((c) => !c.isDraft).length;
+              final draftsCount = calcs.where((c) => c.isDraft).length;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screen,
+                  vertical: AppSpacing.xs,
+                ),
+                child: Row(
+                  children: [
+                    _buildFilterPill('all', 'All', calcs.length),
+                    const SizedBox(width: AppSpacing.xs),
+                    _buildFilterPill('published', 'Published', publishedCount),
+                    const SizedBox(width: AppSpacing.xs),
+                    _buildFilterPill('drafts', 'Drafts', draftsCount),
+                  ],
+                ),
+              );
+            },
+            orElse: () => const SizedBox.shrink(),
           ),
           const Divider(height: 1),
           // Calculators List
@@ -315,14 +352,60 @@ class _CustomStudioLibraryScreenState
     );
   }
 
-  Widget _buildFilterChip(String key, String label) {
+  Widget _buildFilterPill(String key, String label, int count) {
+    final p = context.pal;
     final isSelected = _filter == key;
-    return ChoiceChip(
-      selected: isSelected,
-      label: Text(label),
-      onSelected: (val) {
-        if (val) setState(() => _filter = key);
-      },
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        onTap: () => setState(() => _filter = key),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? p.primary : p.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: isSelected ? p.primary : p.outline,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? p.onPrimary : p.ink,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: 5),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? p.onPrimary.withValues(alpha: 0.22)
+                        : p.outline.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      color: isSelected ? p.onPrimary : p.inkSubtle,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -334,11 +417,18 @@ class _CustomStudioLibraryScreenState
     );
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.cardGap),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
         color: p.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: p.outline),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -352,15 +442,15 @@ class _CustomStudioLibraryScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: p.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Icon(
                       _iconForKey(def.iconKey),
-                      size: 22,
+                      size: 24,
                       color: p.primary,
                     ),
                   ),
@@ -375,28 +465,49 @@ class _CustomStudioLibraryScreenState
                               child: Text(
                                 def.name,
                                 style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (def.isDraft)
                               Container(
                                 margin: const EdgeInsets.only(left: 6),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: p.loss.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(AppRadius.xs),
                                 ),
                                 child: Text(
                                   'DRAFT',
                                   style: t.labelSmall?.copyWith(
                                     color: p.loss,
                                     fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              )
+                            else if (def.category.isNotEmpty)
+                              Container(
+                                margin: const EdgeInsets.only(left: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: p.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                                ),
+                                child: Text(
+                                  def.category.toUpperCase(),
+                                  style: TextStyle(
+                                    color: p.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
                           ],
                         ),
                         if (def.description.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             def.description,
                             maxLines: 2,
@@ -486,34 +597,27 @@ class _CustomStudioLibraryScreenState
               ),
               const SizedBox(height: AppSpacing.md),
               const Divider(height: 1),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
                           color: p.surfaceAlt,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          '${def.inputs.length} inputs • ${def.outputs.length} outputs',
-                          style: t.labelSmall?.copyWith(color: p.inkMuted),
+                          '${def.inputs.length} inputs • ${def.outputs.length} formulas',
+                          style: t.labelSmall?.copyWith(color: p.inkMuted, fontWeight: FontWeight.w600),
                         ),
                       ),
-                      if (def.category.isNotEmpty) ...[
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          '• ${def.category}',
-                          style: t.labelSmall?.copyWith(color: p.inkSubtle),
-                        ),
-                      ],
                     ],
                   ),
                   Text(
-                    dateStr,
+                    'Updated $dateStr',
                     style: t.labelSmall?.copyWith(color: p.inkSubtle),
                   ),
                 ],
@@ -530,47 +634,107 @@ class _CustomStudioLibraryScreenState
     final t = Theme.of(context).textTheme;
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screen,
+          vertical: AppSpacing.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: p.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: p.primary.withValues(alpha: 0.25),
+                  width: 2,
+                ),
               ),
-              child: Icon(PhosphorIconsRegular.calculator, size: 32, color: p.primary),
+              child: Icon(
+                PhosphorIconsBold.calculator,
+                size: 38,
+                color: p.primary,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              isCompletelyEmpty ? 'Build Your Own Calculators' : 'No matching calculators',
+              isCompletelyEmpty
+                  ? 'Build Your Own Calculators'
+                  : 'No matching calculators',
               style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              isCompletelyEmpty
-                  ? 'Custom Calculator Studio lets you create tailored financial calculators for freelance revenue, rental yield, custom margins, or unique repayment schedules.'
-                  : 'Try adjusting your search query or filter chips.',
-              textAlign: TextAlign.center,
-              style: t.bodySmall?.copyWith(color: p.inkSubtle),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                isCompletelyEmpty
+                    ? 'Build bespoke calculators with custom inputs, reactive formulas, and live evaluation.'
+                    : 'Try adjusting your search query or filter chips.',
+                textAlign: TextAlign.center,
+                style: t.bodySmall?.copyWith(color: p.inkSubtle),
+              ),
             ),
-            const SizedBox(height: AppSpacing.lg),
             if (isCompletelyEmpty) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: p.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(color: p.outline),
+                ),
+                child: Column(
+                  children: [
+                    _buildStudioFeature(
+                      context,
+                      PhosphorIconsBold.slidersHorizontal,
+                      'Custom Inputs',
+                      'Currency, numbers, sliders, toggles & dropdown lists.',
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildStudioFeature(
+                      context,
+                      PhosphorIconsBold.function,
+                      'Smart Formula Engine',
+                      'Combine variables with basic math & advanced functions.',
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildStudioFeature(
+                      context,
+                      PhosphorIconsBold.shareNetwork,
+                      'Instant Save & Export',
+                      'Simulate scenarios and export definitions as JSON.',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
               FilledButton.icon(
-                icon: const Icon(PhosphorIconsRegular.plus, size: 18),
-                label: const Text('Create First Calculator'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: p.primary,
+                  foregroundColor: p.onPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                ),
+                icon: const Icon(PhosphorIconsBold.plus, size: 18),
+                label: const Text(
+                  'Create First Calculator',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                ),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const CalculatorBuilderScreen(),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              OutlinedButton.icon(
-                icon: const Icon(PhosphorIconsRegular.fileArrowDown, size: 18),
+              const SizedBox(height: AppSpacing.xs),
+              TextButton.icon(
+                icon: const Icon(PhosphorIconsRegular.fileArrowDown, size: 16),
                 label: const Text('Import from JSON'),
                 onPressed: _importCalculator,
               ),
@@ -578,6 +742,50 @@ class _CustomStudioLibraryScreenState
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStudioFeature(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String description,
+  ) {
+    final p = context.pal;
+    final t = Theme.of(context).textTheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: p.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: p.outline),
+          ),
+          child: Icon(icon, size: 18, color: p.primary),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: t.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: p.ink,
+                ),
+              ),
+              Text(
+                description,
+                style: t.bodySmall?.copyWith(color: p.inkSubtle, fontSize: 11.5),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
