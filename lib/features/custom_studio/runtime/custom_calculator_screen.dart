@@ -133,19 +133,23 @@ class _CustomCalculatorScreenState
     final now = DateTime.now().millisecondsSinceEpoch;
     final primaryOut = execResult.primaryOutput;
     final primaryVal = execResult.primaryValue ?? 0.0;
-    final formattedPrimary = primaryOut != null
-        ? _formatValue(primaryVal, primaryOut, fmt)
-        : fmt.money(primaryVal);
 
     final snapshot = <String, dynamic>{
-      'primary_label': primaryOut?.label ?? 'Result',
-      'primary_value': formattedPrimary,
-      'outputs': {
-        for (final o in execResult.outputs)
-          o.def.label: o.value != null
-              ? _formatValue(o.value!, o.def, fmt)
-              : (o.errorMessage ?? '-')
+      'primary': {
+        'l': primaryOut?.label ?? 'Result',
+        'v': primaryVal,
+        'k': _valueKindForOutput(primaryOut?.kind).name,
+        't': null,
       },
+      'rows': [
+        for (final o in execResult.outputs)
+          {
+            'l': o.def.label,
+            'v': o.value,
+            'k': _valueKindForOutput(o.def.kind).name,
+            't': null,
+          }
+      ],
     };
 
     final s = _saved == null

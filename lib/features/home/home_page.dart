@@ -13,6 +13,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/section_header.dart';
 import '../calculator/calculator_screen.dart';
+import '../catalog/catalog_page.dart';
 import '../catalog/category_page.dart';
 
 void openCalc(BuildContext context, CalculatorDef d, {Scenario? existing}) =>
@@ -143,16 +144,12 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                   crossAxisCount: 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
                   mainAxisSpacing: AppSpacing.sm,
                   crossAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: 1.75,
+                  childAspectRatio: 1.65,
                   children: [
-                    for (final c in [
-                      CalcCategory.growth,
-                      CalcCategory.loans,
-                      CalcCategory.planning,
-                      CalcCategory.returns,
-                    ])
+                    for (final c in CalcCategory.values)
                       Builder(builder: (ctx) {
                         final catColor = categoryAccent(ctx, c);
                         return AppCard(
@@ -169,8 +166,8 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconBadge(iconForCategory(c),
-                                  size: 32, color: catColor),
-                              const SizedBox(height: 6),
+                                  size: 30, color: catColor),
+                              const SizedBox(height: 5),
                               Text(
                                 c.label,
                                 style: t.titleMedium?.copyWith(
@@ -192,61 +189,49 @@ class _HomePageState extends ConsumerState<HomePage> with ScrollDividerMixin {
                           ),
                         );
                       }),
+                    Builder(builder: (ctx) {
+                      final p = context.pal;
+                      return AppCard(
+                        onTap: () => Navigator.of(ctx).push(
+                          MaterialPageRoute(
+                              builder: (_) => const CatalogPage()),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconBadge(PhosphorIconsRegular.squaresFour,
+                                size: 30, color: p.primary),
+                            const SizedBox(height: 5),
+                            Text(
+                              'All Calculators',
+                              style: t.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              '${catalog.length} calculators',
+                              style: t.bodyMedium?.copyWith(
+                                color: p.inkSubtle,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Builder(builder: (ctx) {
-                  const c = CalcCategory.utilities;
-                  final catColor = categoryAccent(ctx, c);
-                  return AppCard(
-                    onTap: () => Navigator.of(ctx).push(
-                      MaterialPageRoute(
-                          builder: (_) => const CategoryPage(category: c)),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        IconBadge(iconForCategory(c),
-                            size: 32, color: catColor),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                c.label,
-                                style: t.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                _calcCount(c),
-                                style: t.bodyMedium?.copyWith(
-                                  color: context.pal.inkSubtle,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          PhosphorIconsRegular.caretRight,
-                          size: 16,
-                          color: context.pal.inkSubtle,
-                        ),
-                      ],
-                    ),
-                  );
-                }),
                 const SectionHeader('Popular',
-                    topSpacing: 18, bottomSpacing: 8),
+                    topSpacing: 16, bottomSpacing: 8),
                 for (int i = 0; i < _popularIds.length; i++) ...[
                   if (i > 0) const SizedBox(height: AppSpacing.cardGap),
                   CalcTile(

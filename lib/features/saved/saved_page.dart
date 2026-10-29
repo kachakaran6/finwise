@@ -10,6 +10,7 @@ import '../../domain/models/calc.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../../theme/app_spacing.dart';
+import '../custom_studio/runtime/custom_calculator_screen.dart';
 import '../home/home_page.dart';
 import 'compare_page.dart';
 
@@ -172,14 +173,65 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                       padding:
                           const EdgeInsets.only(bottom: AppSpacing.cardGap),
                       child: Builder(builder: (context) {
-                        final def = calcById(s.calcId);
-                        if (def == null) return const SizedBox.shrink();
-                        final catColor = categoryAccent(context, def.category);
+                        final isCustom = s.calcId.startsWith('custom_');
+                        final def = isCustom ? null : calcById(s.calcId);
+                        final customCalcs =
+                            ref.watch(customCalcsProvider).valueOrNull ?? const [];
+                        final customId =
+                            isCustom ? s.calcId.replaceFirst('custom_', '') : null;
+                        final customDef = isCustom
+                            ? customCalcs
+                                .where((c) => c.id == customId)
+                                .firstOrNull
+                            : null;
+
+                        if (!isCustom && def == null) return const SizedBox.shrink();
+
+                        final calcName =
+                            def?.name ?? customDef?.name ?? 'Custom Calculator';
+                        final catColor = def != null
+                            ? categoryAccent(context, def.category)
+                            : (customDef != null
+                                ? categoryAccent(
+                                    context,
+                                    CalcCategory.values.firstWhere(
+                                      (c) => c.name == customDef.category,
+                                      orElse: () => CalcCategory.planning,
+                                    ),
+                                  )
+                                : p.primary);
+                        final calcIcon = def != null
+                            ? iconForCalc(def.id)
+                            : PhosphorIconsRegular.wrench;
 
                         return AppCard(
-                          onTap: _selecting
-                              ? () => _toggle(s, list)
-                              : () => openCalc(context, def, existing: s),
+                          onTap: () async {
+                            if (_selecting) {
+                              _toggle(s, list);
+                              return;
+                            }
+                            if (def != null) {
+                              openCalc(context, def, existing: s);
+                            } else if (customId != null) {
+                              var d = customDef;
+                              d ??= await ref
+                                  .read(customCalcRepoProvider)
+                                  .getById(customId);
+                              if (d != null && context.mounted) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => CustomCalculatorScreen(
+                                      definition: d!,
+                                      existingScenario: s,
+                                    ),
+                                  ),
+                                );
+                              } else if (context.mounted) {
+                                toast(context,
+                                    'Custom calculator definition not found.');
+                              }
+                            }
+                          },
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Row(
                             children: [
@@ -194,7 +246,7 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                                 Padding(
                                   padding: const EdgeInsets.only(right: Sp.md),
                                   child: IconBadge(
-                                    iconForCalc(def.id),
+                                    calcIcon,
                                     color: catColor,
                                     size: 40,
                                   ),
@@ -212,7 +264,7 @@ class _SavedPageState extends ConsumerState<SavedPage> with ScrollDividerMixin {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${def.name} · ${df.format(DateTime.fromMillisecondsSinceEpoch(s.updatedAt))}',
+                                      '$calcName · ${df.format(DateTime.fromMillisecondsSinceEpoch(s.updatedAt))}',
                                       style: t.bodySmall
                                           ?.copyWith(color: p.inkMuted),
                                       maxLines: 1,

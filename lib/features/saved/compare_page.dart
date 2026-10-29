@@ -10,6 +10,14 @@ import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/common.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../custom_studio/domain/models/custom_input_def.dart';
+
+class _DiffItem {
+  const _DiffItem({required this.label, required this.textA, required this.textB});
+  final String label;
+  final String textA;
+  final String textB;
+}
 
 /// Side-by-side comparison of two saved scenarios of the same calculator.
 /// Displays scenario overviews, differing inputs, and full result metric deltas
@@ -23,7 +31,14 @@ class ComparePage extends ConsumerWidget {
     final p = context.pal;
     final t = Theme.of(context).textTheme;
     final fmt = ref.watch(fmtProvider);
-    final def = calcById(a.calcId)!;
+    final isCustom = a.calcId.startsWith('custom_');
+    final def = isCustom ? null : calcById(a.calcId);
+    final customCalcs = ref.watch(customCalcsProvider).valueOrNull ?? const [];
+    final customId = isCustom ? a.calcId.replaceFirst('custom_', '') : null;
+    final customDef = isCustom
+        ? customCalcs.where((c) => c.id == customId).firstOrNull
+        : null;
+    final calcName = def?.name ?? customDef?.name ?? 'Custom Calculator';
     final df = DateFormat.yMMMd();
 
     String inputText(FieldDef f, Map<String, dynamic> m) {
@@ -34,10 +49,58 @@ class ComparePage extends ConsumerWidget {
       return f.money ? fmt.money(d) : fmt.number(d);
     }
 
-    final diffs = def.fields
-        .where((f) =>
-            f.visible({...a.inputs}) && '${a.inputs[f.id]}' != '${b.inputs[f.id]}')
-        .toList();
+    String customInputText(CustomInputDef f, Map<String, dynamic> m) {
+      final v = m[f.id];
+      if (v == null) return '–';
+      if (v is num) {
+        final d = v.toDouble();
+        if (f.type == CustomInputType.currency) return fmt.money(d);
+        if (f.type == CustomInputType.percentage) return fmt.percent(d);
+        return fmt.number(d);
+      }
+      return v.toString();
+    }
+
+    final List<_DiffItem> diffs;
+    if (def != null) {
+      diffs = def.fields
+          .where((f) =>
+              f.visible({...a.inputs}) && '${a.inputs[f.id]}' != '${b.inputs[f.id]}')
+          .map((f) => _DiffItem(
+                label: f.label,
+                textA: inputText(f, a.inputs),
+                textB: inputText(f, b.inputs),
+              ))
+          .toList();
+    } else if (customDef != null) {
+      diffs = customDef.inputs
+          .where((f) =>
+              f.isComputational &&
+              '${a.inputs[f.id]}' != '${b.inputs[f.id]}')
+          .map((f) => _DiffItem(
+                label: f.label,
+                textA: customInputText(f, a.inputs),
+                textB: customInputText(f, b.inputs),
+              ))
+          .toList();
+    } else {
+      final allKeys = {...a.inputs.keys, ...b.inputs.keys};
+      diffs = allKeys
+          .where((k) => '${a.inputs[k]}' != '${b.inputs[k]}')
+          .map((k) {
+            String formatVal(dynamic v) {
+              if (v == null) return '–';
+              if (v is num) return fmt.number(v.toDouble());
+              return v.toString();
+            }
+            return _DiffItem(
+              label: k,
+              textA: formatVal(a.inputs[k]),
+              textB: formatVal(b.inputs[k]),
+            );
+          })
+          .toList();
+    }
 
     final rowsA = [a.primary, ...a.rows];
     final rowsB = {for (final r in [b.primary, ...b.rows]) r.label: r};
@@ -52,7 +115,7 @@ class ComparePage extends ConsumerWidget {
       backgroundColor: p.bg,
       body: Column(
         children: [
-          AppHeader(title: 'Compare · ${def.name}'),
+          AppHeader(title: 'Compare · $calcName'),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
@@ -190,7 +253,7 @@ class ComparePage extends ConsumerWidget {
                                     Expanded(
                                       flex: 3,
                                       child: Text(
-                                        inputText(diffs[i], a.inputs),
+                                        diffs[i].textA,
                                         textAlign: TextAlign.right,
                                         style: AppType.figure(p.ink, size: 13),
                                       ),
@@ -198,7 +261,7 @@ class ComparePage extends ConsumerWidget {
                                     Expanded(
                                       flex: 3,
                                       child: Text(
-                                        inputText(diffs[i], b.inputs),
+                                        diffs[i].textB,
                                         textAlign: TextAlign.right,
                                         style: AppType.figure(p.primary, size: 13, w: FontWeight.w700),
                                       ),
