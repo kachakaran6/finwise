@@ -3,3 +3,4 @@
 • Refined Studio UI: Intuitive 4-step wizard, interactive category selectors, and formula cheat sheets
 • Scenario Persistence: Full backup, restore, and comparison support for custom calculations
 • 100% private, offline calculations with zero data tracking
+
