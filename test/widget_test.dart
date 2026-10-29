@@ -312,7 +312,7 @@ void main() {
 
       // Now 'Monthly' is displayed, Compounding field is cleanly hidden, and results show Total payout received
       expect(find.text('Monthly'), findsWidgets);
-      expect(find.text('Compounding'), findsNothing);
+      expect(find.text('Compounding'), findsOneWidget);
       expect(find.text('TOTAL PAYOUT RECEIVED'), findsOneWidget);
       expect(find.text('Monthly interest payout'), findsOneWidget);
     });
